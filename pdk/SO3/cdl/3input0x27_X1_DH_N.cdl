@@ -1,0 +1,16 @@
+.SUBCKT 3input0x27_X1_DH_N A1 A2 A3 VDD VSS Y
+MM5 VDD A1 oai21 VDD pmos_rvt w=46.00n l=16n nfin=2
+MM3 oai21 A3 n1 VDD pmos_rvt w=46.00n l=16n nfin=2
+MM4 VDD A2 n1 VDD pmos_rvt w=46.00n l=16n nfin=2
+MM2 oai21 A1 n2 VSS nmos_rvt w=46.00n l=16n nfin=2
+MM0 VSS A2 n2 VSS nmos_rvt w=46.00n l=16n nfin=2
+MM1 VSS A3 n2 VSS nmos_rvt w=46.00n l=16n nfin=2
+MM6 n3 A2 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM7 n3 A3 n4 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM9 Y A1 n4 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM8 Y oai21 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM10 n6 oai21 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 VSS A1 n6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM12 VSS A2 n6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM13 VSS A3 n6 VSS nmos_rvt w=46.0n l=16n nfin=2
+.ENDS

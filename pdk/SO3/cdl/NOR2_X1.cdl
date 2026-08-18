@@ -1,0 +1,6 @@
+.SUBCKT NOR2_X1 A1 A2 VDD VSS ZN
+MM3 VSS A1 ZN VSS nmos_rvt w=46.0n l=16n nfin=2
+MM2 VSS A2 ZN VSS nmos_rvt w=46.0n l=16n nfin=2
+MM1 net16 A1 ZN VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 VDD A2 net16 VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

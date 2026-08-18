@@ -1,0 +1,26 @@
+* selected_from: 4input0xE880_X1_alt_v1_ssv32
+* source_file: ck_server/feynman/final_4input0xE880_X1.cdl
+* ck_server_log: ck_server/feynman/4input0xE880_X1_dummy1/logs/4input0xE880_X1_alt_v1_ssv32.log
+* dummy_for_ideal: 1
+* width_cols: 19
+* transistor_count: 16
+* objective: 797.0
+* via_count: 0
+.SUBCKT 4input0xE880_X1 A1 A2 A3 A4 VDD VSS Y
+MM0 p1 A1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 p2 A4 p1 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 Y A2 p2 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM3 Y A3 p2 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM4 p3 A1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM5 p3 A4 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 p4 A2 p3 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM7 Y A3 p4 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM8 n1 A1 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM9 VSS A4 n1 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM10 n2 A2 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 VSS A3 n2 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM12 n3 A2 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM13 n3 A3 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM14 VSS A1 n3 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM15 VSS A4 n3 VSS nmos_rvt w=46.0n l=16n nfin=2
+.ENDS 4input0xE880_X1

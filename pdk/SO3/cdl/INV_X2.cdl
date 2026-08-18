@@ -1,0 +1,4 @@
+.SUBCKT INV_X2 I VDD VSS ZN
+MM0 ZN I VSS VSS nmos_rvt w=92.00n l=16n nfin=4
+MM1 ZN I VDD VDD pmos_rvt w=92.00n l=16n nfin=4
+.ENDS

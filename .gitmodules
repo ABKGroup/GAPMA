@@ -1,0 +1,9 @@
+[submodule "tools/third_party/OpenDB"]
+	path = tools/third_party/OpenDB
+	url = https://github.com/The-OpenROAD-Project/OpenDB.git
+[submodule "tools/third_party/yosys"]
+	path = tools/third_party/yosys
+	url = https://github.com/YosysHQ/yosys.git
+[submodule "tools/cell_generation/SO3-Cell"]
+	path = tools/cell_generation/SO3-Cell
+	url = https://github.com/ckchengucsd/SO3-Cell.git

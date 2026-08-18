@@ -1,0 +1,66 @@
+MACRO 4input0x8000_X1
+  CLASS CORE ;
+  ORIGIN 0 0 ;
+  FOREIGN 4input0x8000_X1 0 0 ;
+  SIZE 0.2250 BY 0.1440 ;
+  SYMMETRY X Y ;
+  SITE coresite ;
+  PIN A
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.1680 0.0770 0.2020 0.0910 ;
+    END
+  END A
+  PIN B
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.1230 0.0530 0.1570 0.0670 ;
+    END
+  END B
+  PIN C
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0680 0.0530 0.1020 0.0670 ;
+    END
+  END C
+  PIN D
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0220 0.0770 0.0570 0.0910 ;
+    END
+  END D
+  PIN Y
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0100 0.0290 0.2140 0.0430 ;
+    END
+  END Y
+  PIN VDD
+    DIRECTION INOUT ;
+    USE POWER ;
+    SHAPE ABUTMENT ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0000 0.1260 0.2250 0.1620 ;
+    END
+  END VDD
+  PIN VSS
+    DIRECTION INOUT ;
+    USE GROUND ;
+    SHAPE ABUTMENT ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0000 -0.0180 0.2250 0.0180 ;
+    END
+  END VSS
+END 4input0x8000_X1

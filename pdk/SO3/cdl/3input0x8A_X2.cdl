@@ -1,0 +1,10 @@
+.SUBCKT 3input0x8A_X2 A1 A2 A3 VDD VSS Y
+MM5 Y A3 VSS VSS nmos_rvt w=92.0n l=16n nfin=4
+MM4 n2 na1 Y VSS nmos_rvt w=92.0n l=16n nfin=4
+MM3 n2 A2 VSS VSS nmos_rvt w=92.0n l=16n nfin=4
+MM2 n1 A3 VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM1 n1 na1 Y VDD pmos_rvt w=92.0n l=16n nfin=4
+MM0 n1 A2 Y VDD pmos_rvt w=92.0n l=16n nfin=4
+MM7 na1 A1 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM6 na1 A1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

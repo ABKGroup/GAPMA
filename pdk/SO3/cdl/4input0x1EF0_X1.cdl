@@ -1,0 +1,21 @@
+.SUBCKT 4input0x1EF0_X1 A B C D VDD VSS Y
+* Canonical: 0b0000011111111000
+* Function: Y = binate [recursive NAND/NOR, 16 TR]
+* Transistors: 16
+MbdhP1 npbdh0 B VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MbdhP2 bdh C npbdh0 VDD pmos_rvt W=46.0n L=16n nfin=2
+MbdhP3 bdh D npbdh0 VDD pmos_rvt W=46.0n L=16n nfin=2
+MP121 bdcg A VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MP122 bdcg bdh VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MbdccP0 Y bdcg VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MbdccP2 npbdcc1 bdh VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MbdccP3 Y A npbdcc1 VDD pmos_rvt W=46.0n L=16n nfin=2
+MbdhN0 bdh B VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MbdhN2 bdh C nsbdh1 VSS nmos_rvt W=46.0n L=16n nfin=2
+MbdhN3 nsbdh1 D VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MN123 bdcg A bdcgs0 VSS nmos_rvt W=46.0n L=16n nfin=2
+MN124 bdcgs0 bdh VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MbdccN1 Y bdcg nsbdcc0 VSS nmos_rvt W=46.0n L=16n nfin=2
+MbdccN2 nsbdcc0 bdh VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MbdccN3 nsbdcc0 A VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+.ENDS

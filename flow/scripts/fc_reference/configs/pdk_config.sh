@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+FLOW_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+JSON="$FLOW_DIR/configs/pdk_config.json"
+OUT="$FLOW_DIR/configs/pdk_resolved.tcl"
+
+# Every path this script resolves hangs off PDK_DIR, so a placeholder default
+# would silently emit a pdk_resolved.tcl full of paths that do not exist and
+# push the failure into the middle of an FC run.
+if [[ -z "${PDK_DIR:-}" ]]; then
+    echo "ERROR: PDK_DIR is not set. It is the directory holding the per-PDK" >&2
+    echo "  subdirectories, i.e. the parent of \$PDK_ROOT." >&2
+    echo "  Usage: PDK_DIR=\"\$(dirname \"\$PDK_ROOT\")\" PDK_NAME=SO3 $0" >&2
+    exit 1
+fi
+
+if [[ -z "${PDK_NAME:-}" ]]; then
+    echo "ERROR: PDK_NAME is not set." >&2
+    echo "  Usage: PDK_NAME=SO3 [TOP_DESIGN_NAME=gcd] $0" >&2
+    echo "  Valid PDK names: $(jq -r '[keys[] | select(startswith("_") | not)] | join(", ")' "$JSON")" >&2
+    exit 1
+fi
+
+if ! jq -e ".\"${PDK_NAME}\"" "$JSON" > /dev/null 2>&1; then
+    echo "ERROR: Unknown PDK '${PDK_NAME}'." >&2
+    echo "  Valid options: $(jq -r '[keys[] | select(startswith("_") | not)] | join(", ")' "$JSON")" >&2
+    exit 1
+fi
+
+P="${PDK_NAME}"
+P_DIR="${P%_SS}"
+P_DIR="${P_DIR%_FF}"
+P_DIR="${P_DIR%_TT}"
+P_DIR="${P_DIR%_MCMM}"
+BASE="${PDK_DIR}/${P_DIR}"
+
+_val() { jq -r ".\"$P\".$1 // empty" "$JSON"; }
+
+_abs_list() {
+    jq -r ".\"$P\".$1 // [] | .[]" "$JSON" | while read -r f; do
+        if [[ "$f" == *'*'* ]]; then
+            for g in ${BASE}/${f}; do
+                [[ -e "$g" ]] && printf '%s ' "$g"
+            done
+        else
+            printf '%s ' "${BASE}/${f}"
+        fi
+    done
+}
+
+if [[ -z "$(_val design_node)" ]]; then
+    echo "ERROR: PDK '${P}' has no 'design_node' in $JSON." >&2
+    exit 1
+fi
+
+tech_file="${BASE}/$(_val tech_file)"
+tech_lef="${BASE}/$(_val tech_lef)"
+tlup_file="${BASE}/$(_val tlup_file)"
+layer_map_rel="$(_val layer_map_file)"
+layer_map="${FLOW_DIR}/${layer_map_rel}"
+floorplan_file="$(_val floorplan_file)"
+pdn_file="$(_val pdn_file)"
+min_routing="$(_val routing.min_layer)"
+max_routing="$(_val routing.max_layer)"
+routing_list="$(_val routing.layer_direction_offset_list)"
+parasitic_tcl="${FLOW_DIR}/configs/parasitic/${P_DIR}.tcl"
+
+_cell_frames=""
+_cell_dbs=""
+_cell_mode=0
+if [[ -n "${CELL_LIST:-}" || -n "${CELL_NAMES:-}" ]]; then
+    _cell_mode=1
+    _cells=""
+    if [[ -n "${CELL_LIST:-}" ]]; then
+        if [[ ! -f "$CELL_LIST" ]]; then
+            echo "ERROR: CELL_LIST not found: $CELL_LIST" >&2
+            exit 1
+        fi
+        _cells="$(grep -vE '^[[:space:]]*(#|$)' "$CELL_LIST" | tr -d '\r')"
+    fi
+    [[ -n "${CELL_NAMES:-}" ]] && _cells="${_cells}
+${CELL_NAMES// /
+}"
+    _cells="$(printf '%s\n' $_cells | sed '/^$/d' | sort -u)"
+    if [[ -z "$_cells" ]]; then
+        echo "ERROR: CELL_LIST/CELL_NAMES produced an empty cell set." >&2
+        exit 1
+    fi
+
+    _db_suffix="${CELL_DB_SUFFIX:-_tt_0.7_25_nldm.db}"
+    _missing_lef=""
+    _missing_db=""
+    _n_cells=0
+    while read -r _c; do
+        [[ -z "$_c" ]] && continue
+        _n_cells=$((_n_cells+1))
+        _lef="${BASE}/lef/${_c}.lef"
+        _db="${BASE}/db/${_c}${_db_suffix}"
+        [[ -f "$_lef" ]] || _missing_lef="${_missing_lef} ${_c}"
+        [[ -f "$_db"  ]] || _missing_db="${_missing_db} ${_c}"
+        _cell_frames="${_cell_frames} ${_lef}"
+        _cell_dbs="${_cell_dbs} ${_db}"
+    done <<< "$_cells"
+
+    if [[ -n "$_missing_lef" || -n "$_missing_db" ]]; then
+        echo "ERROR: per-cell library set is incomplete (lef/db mismatch)." >&2
+        [[ -n "$_missing_lef" ]] && echo "  cells with NO LEF (${BASE}/lef/<cell>.lef):${_missing_lef}" >&2
+        [[ -n "$_missing_db"  ]] && echo "  cells with NO DB  (${BASE}/db/<cell>${_db_suffix}):${_missing_db}" >&2
+        echo "  Generate the missing views, or drop these cells from the list." >&2
+        exit 1
+    fi
+
+    for _e in ${CELL_EXTRA_LEF:-}; do
+        [[ -f "${BASE}/${_e}" ]] || { echo "ERROR: CELL_EXTRA_LEF not found: ${BASE}/${_e}" >&2; exit 1; }
+        _cell_frames="${_cell_frames} ${BASE}/${_e}"
+    done
+    for _e in ${CELL_EXTRA_DB:-}; do
+        [[ -f "${BASE}/${_e}" ]] || { echo "ERROR: CELL_EXTRA_DB not found: ${BASE}/${_e}" >&2; exit 1; }
+        _cell_dbs="${_cell_dbs} ${BASE}/${_e}"
+    done
+    echo "[pdk_config] CELL mode: ${_n_cells} cells, lef+db views verified 1:1" >&2
+fi
+
+if (( _cell_mode )); then
+    ref_libs="${BASE}/$(_val tech_lef)${_cell_frames}"
+else
+    ref_libs="${BASE}/$(_val tech_lef) $(_abs_list macro_lef)"
+fi
+
+worst_db="$(_abs_list worst_db)"
+_best_raw="$(jq -r ".\"$P\".best_db // \"null\"" "$JSON")"
+if [[ "$_best_raw" == "null" ]]; then
+    best_db="$worst_db"
+else
+    best_db="$(_abs_list best_db)"
+fi
+if (( _cell_mode )); then
+    db_files="${_cell_dbs# }"
+else
+    db_files="$worst_db"
+fi
+
+for f in "$tech_file" "$tlup_file" "$layer_map" "$parasitic_tcl"; do
+    if [[ ! -f "$f" ]]; then
+        echo "ERROR: Required file not found: $f" >&2
+        exit 1
+    fi
+done
+
+{
+echo "# Auto-generated by configs/pdk_config.sh — DO NOT EDIT MANUALLY"
+echo "# PDK: $P  DESIGN: ${TOP_DESIGN_NAME:-[not set]}  Generated: $(date '+%Y-%m-%d %H:%M:%S')"
+echo ""
+echo "set PDK_NAME \"${P}\""
+echo ""
+
+if [[ -n "${TOP_DESIGN_NAME:-}" ]]; then
+    echo "set DESIGN_NAME \"${TOP_DESIGN_NAME}\""
+    echo ""
+fi
+
+echo "set TECH_FILE \"${tech_file}\""
+echo ""
+echo "set REFERENCE_LIBRARY \"\""
+echo "set CLIB_REFERENCE_LIBRARY_CONFIGURATION_FLOW_FRAME_LIST [list ${ref_libs}]"
+echo "set CLIB_REFERENCE_LIBRARY_CONFIGURATION_FLOW_DB_LIST [list ${db_files}]"
+echo "set FUSION_REFERENCE_LIBRARY_FRAM_LIST \"\""
+echo "set FUSION_REFERENCE_LIBRARY_DB_LIST \"\""
+echo "set LINK_LIBRARY \$CLIB_REFERENCE_LIBRARY_CONFIGURATION_FLOW_DB_LIST"
+echo ""
+echo "set TCL_PARASITIC_SETUP_FILE \"${parasitic_tcl}\""
+echo ""
+echo "set TCL_FLOORPLAN_FILE \"${floorplan_file}\""
+echo "set TCL_PDN_FILE \"${pdn_file}\""
+echo "set ENABLE_FLOORPLAN_CHECKS false"
+echo ""
+echo "set ROUTING_LAYER_DIRECTION_OFFSET_LIST \"${routing_list}\""
+echo "set MIN_ROUTING_LAYER \"${min_routing}\""
+echo "set MAX_ROUTING_LAYER \"${max_routing}\""
+} > "$OUT"
+
+echo "pdk_config.sh: Generated $OUT  [PDK=${P}, DESIGN=${TOP_DESIGN_NAME:-[not set]}, PDK_DIR=${PDK_DIR}]"

@@ -1,0 +1,94 @@
+VERSION 5.8 ;
+BUSBITCHARS "[]" ;
+DIVIDERCHAR "/" ;
+CLEARANCEMEASURE EUCLIDEAN ;
+
+SITE coresite_DH_P
+    SIZE 0.0450 BY 0.2880 ;
+    CLASS CORE ;
+    SYMMETRY X Y ;
+END coresite_DH_P
+
+SITE coresite_DH_N
+    SIZE 0.0450 BY 0.2880 ;
+    CLASS CORE ;
+    SYMMETRY X Y ;
+END coresite_DH_N
+
+SITE coresite
+    SIZE 0.0450 BY 0.1440 ;
+    CLASS CORE ;
+    SYMMETRY X Y ;
+END coresite
+
+MACRO 3input0x1_X1
+  CLASS CORE ;
+  ORIGIN 0 0 ;
+  FOREIGN 3input0x1_X1 0 0 ;
+  SIZE 0.2250 BY 0.1440 ;
+  SYMMETRY X Y ;
+  SITE coresite ;
+  PIN Y
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M1 ;
+        RECT 0.0225 0.0960 0.0375 0.0240 ;
+      LAYER M0 ;
+        RECT 0.0180 0.0430 0.0795 0.0290 ;
+        RECT 0.0105 0.0910 0.0450 0.0770 ;
+    END
+  END Y
+  PIN A2
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.1125 0.0430 0.1470 0.0290 ;
+    END
+  END A2
+  PIN A1
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0225 0.1150 0.0570 0.1010 ;
+    END
+  END A1
+  PIN A3
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.1680 0.1150 0.2025 0.1010 ;
+    END
+  END A3
+  PIN VDD
+    DIRECTION INOUT ;
+    USE POWER ;
+    SHAPE ABUTMENT ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0000 0.1260 0.2250 0.1620 ;
+    END
+  END VDD
+  PIN VSS
+    DIRECTION INOUT ;
+    USE GROUND ;
+    SHAPE ABUTMENT ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0000 -0.0180 0.2250 0.0180 ;
+    END
+  END VSS
+  OBS
+      LAYER V0 ;
+        RECT 0.0230 0.0770 0.0370 0.0910 ;
+        RECT 0.0230 0.0290 0.0370 0.0430 ;
+      LAYER M0 ;
+        RECT 0.0780 0.0530 0.2145 0.0670 ;
+        RECT 0.0780 0.0770 0.1695 0.0910 ;
+  END
+END 3input0x1_X1
+
+END LIBRARY

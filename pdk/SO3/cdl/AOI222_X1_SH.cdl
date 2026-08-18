@@ -1,0 +1,14 @@
+.SUBCKT AOI222_X1_SH A1 A2 B1 B2 C1 C2 VDD VSS Y
+MM6 net50 C2 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 Y C1 net50 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM4 net51 B2 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 Y B1 net51 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM1 net49 A2 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM0 Y A1 net49 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM12 Y A2 net53 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM11 net53 B2 net27 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM10 net27 C2 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM9 Y A1 net53 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM8 net53 B1 net27 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM7 net27 C1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

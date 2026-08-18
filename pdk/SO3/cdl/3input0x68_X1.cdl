@@ -1,0 +1,20 @@
+.SUBCKT 3input0x68_X1 A1 A2 A3 VDD VSS Y
+MM5 VSS A1 nor3 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM4 VSS A2 nor3 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 VSS A3 nor3 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM2 n2 A1 nor3 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 n1 A2 n2 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 VDD A3 n1 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 n4 A1 n3 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM7 n4 A3 n3 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM8 Y A2 n3 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM9 n4 A3 n5 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM10 n5 A1 Y VDD pmos_rvt w=46.0n l=16n nfin=2
+MM11 VDD nor3 n4 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM14 VSS nor3 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM12 VSS A1 n6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM13 VSS A3 n6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM15 Y A2 n6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM16 n7 A1 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM17 n7 A3 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+.ENDS

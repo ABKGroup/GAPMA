@@ -1,0 +1,8 @@
+.SUBCKT AOI21_X1 A1 A2 B VDD VSS ZN
+MM5 ZN B VSS VSS nmos_rvt w=46.00n l=16n nfin=2
+MM4 net2 A1 ZN VSS nmos_rvt w=46.00n l=16n nfin=2
+MM3 net2 A2 VSS VSS nmos_rvt w=46.00n l=16n nfin=2
+MM2 net6 B ZN VDD pmos_rvt w=46.00n l=16n nfin=2
+MM1 net6 A1 VDD VDD pmos_rvt w=46.00n l=16n nfin=2
+MM0 net6 A2 VDD VDD pmos_rvt w=46.00n l=16n nfin=2
+.ENDS

@@ -1,0 +1,6 @@
+.SUBCKT BUF_X2 I VDD VSS Z
+MM3 Z in VSS VSS nmos_rvt w=92.0n l=16n nfin=4
+MM2 in I VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM0 Z in VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM1 in I VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

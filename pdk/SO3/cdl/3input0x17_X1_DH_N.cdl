@@ -1,0 +1,14 @@
+.SUBCKT 3input0x17_X1_DH_N A1 A2 A3 VDD VSS Y
+MM0 n1 A2 planar VSS nmos_rvt w=46.0n l=16n nfin=2
+MM1 n1 A3 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM2 n2 A1 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 n2 A2 planar VSS nmos_rvt w=46.0n l=16n nfin=2
+MM4 n2 A3 planar VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 n3 A3 planar VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 n3 A2 planar VDD pmos_rvt w=46.0n l=16n nfin=2
+MM7 VDD A1 n3 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM8 n4 A3 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM9 planar A2 n4 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM10 Y planar VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 Y planar VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

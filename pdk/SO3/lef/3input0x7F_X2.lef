@@ -1,0 +1,62 @@
+MACRO 3input0x7F_X2
+  CLASS CORE ;
+  ORIGIN 0 0 ;
+  FOREIGN 3input0x7F_X2 0 0 ;
+  SIZE 0.2700 BY 0.1440 ;
+  SYMMETRY X Y ;
+  SITE coresite ;
+  PIN A
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.2130 0.0290 0.2475 0.0430 ;
+    END
+  END A
+  PIN B
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.1680 0.1010 0.2025 0.1150 ;
+    END
+  END B
+  PIN C
+    DIRECTION INPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.1125 0.0770 0.1470 0.0910 ;
+    END
+  END C
+  PIN Y
+    DIRECTION OUTPUT ;
+    USE SIGNAL ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0555 0.0290 0.0900 0.0430 ;
+    END
+  END Y
+  PIN VDD
+    DIRECTION INOUT ;
+    USE POWER ;
+    SHAPE ABUTMENT ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0000 0.1260 0.2700 0.1620 ;
+    END
+  END VDD
+  PIN VSS
+    DIRECTION INOUT ;
+    USE GROUND ;
+    SHAPE ABUTMENT ;
+    PORT
+      LAYER M0 ;
+        RECT 0.0000 -0.0180 0.2700 0.0180 ;
+    END
+  END VSS
+  OBS
+    LAYER M0 ;
+      RECT 0.0330 0.0530 0.2595 0.0670 ;
+  END
+END 3input0x7F_X2

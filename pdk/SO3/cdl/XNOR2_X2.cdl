@@ -1,0 +1,12 @@
+.SUBCKT XNOR2_X2 A B VDD VSS Y
+MM4 net015 A Y VSS nmos_rvt w=92.0n l=16n nfin=4
+MM5 net015 B Y VSS nmos_rvt w=92.0n l=16n nfin=4
+MM6 VSS net29 net015 VSS nmos_rvt w=92.0n l=16n nfin=4
+MM2 net29 A net43 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 net43 B VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 net041 A VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM10 Y B net041 VDD pmos_rvt w=92.0n l=16n nfin=4
+MM9 Y net29 VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM0 net29 A VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 net29 B VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

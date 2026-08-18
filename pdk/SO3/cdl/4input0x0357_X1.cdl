@@ -1,0 +1,15 @@
+.SUBCKT 4input0x0357_X1 A B C D VDD VSS Y
+* Canonical: 0b0000001101010111
+* Function: Y = B·C+A·D [4 lits]
+* Transistors: 10
+MMP1 npM0 B VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MMP2 npM0 C VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MMP3 Y_bar A npM0 VDD pmos_rvt W=46.0n L=16n nfin=2
+MMP4 Y_bar D npM0 VDD pmos_rvt W=46.0n L=16n nfin=2
+MP_inv Y Y_bar VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MMN1 Y_bar B nsM0 VSS nmos_rvt W=46.0n L=16n nfin=2
+MMN2 nsM0 C VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MMN4 Y_bar A nsM3 VSS nmos_rvt W=46.0n L=16n nfin=2
+MMN5 nsM3 D VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MN_inv Y Y_bar VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+.ENDS

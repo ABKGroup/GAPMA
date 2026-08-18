@@ -1,0 +1,10 @@
+.SUBCKT AOI211_X1 A1 A2 B C VDD VSS Y
+MM20 Y C VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 Y B VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM4 Y A2 net32 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 net32 A1 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM21 net17 A2 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 net17 A1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 net34 B net17 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM7 Y C net34 VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

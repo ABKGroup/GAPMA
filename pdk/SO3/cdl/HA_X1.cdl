@@ -1,0 +1,12 @@
+.SUBCKT HA_X1 A B CON SN VDD VSS
+MM4 net015 A SN VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 net015 B SN VSS nmos_rvt w=46.0n l=16n nfin=2
+MM6 VSS CON net015 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM2 CON A net43 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 net43 B VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 net041 A VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM10 SN B net041 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM9 SN CON VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 CON A VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 CON B VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

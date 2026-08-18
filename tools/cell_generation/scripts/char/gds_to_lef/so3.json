@@ -1,0 +1,36 @@
+{
+  "boundary_layer": [100, 0],
+  "power_nets": [
+    {"name": "VDD", "use": "POWER"},
+    {"name": "VSS", "use": "GROUND"}
+  ],
+  "lef": {
+    "header_site": {"name": "coresite", "size": [0.0450, 0.1440], "class": "CORE", "symmetry": "X Y"}
+  },
+  "layers": {
+    "layer_table": {
+      "active": [11, 0], "gate": [7, 0], "gcut": [10, 0],
+      "ca": [14, 0], "lig": [16, 0], "lisd": [17, 0], "sdt": [88, 0],
+      "M0": [15, 0], "V0": [18, 0], "M1": [19, 0], "V1": [21, 0], "M2": [20, 0]
+    },
+    "derived_layers": [
+      {"name": "calig",  "expr": "ca & lig"},
+      {"name": "calisd", "expr": "ca & lisd"},
+      {"name": "poly",   "expr": "gate - gcut"},
+      {"name": "sd",     "expr": "active - gate"}
+    ],
+    "connect_rules": [
+      ["lig", "calig"], ["calig", "M0"],
+      ["lisd", "calisd"], ["calisd", "M0"],
+      ["lisd", "sdt"], ["sdt", "sd"],
+      ["lig", "poly"], ["lisd", "lig"],
+      ["M0", "V0"], ["V0", "M1"], ["M1", "V1"], ["V1", "M2"]
+    ],
+    "routing_layers": ["M2", "M1", "M0", "V1", "V0"]
+  },
+  "pins": {
+    "direction": {"output_regex": "CON|Q|QN[0-9]*|SN|Y|Z|ZN", "input_regex": "[A-EI][0-9]*|CI|CK|CLK|RN|S"},
+    "pin_use": {"CLOCK": ["CLK", "CK", "E"]},
+    "text_layers": {"M0": [15, 251], "M1": [19, 251], "M2": [20, 251]}
+  }
+}

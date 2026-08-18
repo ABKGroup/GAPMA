@@ -1,0 +1,15 @@
+.SUBCKT 4input0xAAAE_X1 A B C D VDD VSS Y
+* Canonical: 0b1010101010101110
+* Function: Y = binate [small-gate search, 10 TR]
+* Transistors: 10
+MP0 sg4 A VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MP1 sg4 B VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MP7 Y D VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MP8 Y C sg6_pmid VDD pmos_rvt W=46.0n L=16n nfin=2
+MP9 sg6_pmid sg4 VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MN2 sg4 A sg4_ns0 VSS nmos_rvt W=46.0n L=16n nfin=2
+MN3 sg4_ns0 B VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MN4 Y D sg6_nmid VSS nmos_rvt W=46.0n L=16n nfin=2
+MN5 sg6_nmid C VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MN6 sg6_nmid sg4 VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+.ENDS

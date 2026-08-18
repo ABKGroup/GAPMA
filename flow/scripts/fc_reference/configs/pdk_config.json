@@ -1,0 +1,50 @@
+{
+  "_description": {
+    "design_node": "Technology node in nanometers.",
+    "site_name": "LEF SITE name as defined in the macro LEF. FC renames this to 'unit' during CLIB build (LEFR-064); use 'unit' in floorplan Tcl.",
+    "family_cell_name_regexp": "Regex to extract cell family base name from full cell name (same convention as Cadence pdk_config.json).",
+    "power_net": "Primary power rail name in LEF/liberty.",
+    "ground_net": "Primary ground rail name in LEF/liberty.",
+    "bufs_for_clock": "Glob pattern for CTS buffer cells.",
+    "invs_for_clock": "Glob pattern for CTS inverter cells.",
+    "tech_file": "Synopsys .tf technology file, relative to PDK root (PDK_DIR/PDK_NAME/).",
+    "tech_lef": "Technology LEF file, relative to PDK root.",
+    "macro_lef": "List of macro/cell LEF files, relative to PDK root.",
+    "worst_db": "List of worst-corner Synopsys .db liberty files for FC, relative to PDK root.",
+    "best_db": "List of best-corner .db files, or null to reuse worst_db.",
+    "tlup_file": "TLUPlus parasitic model file (.tlup), relative to PDK root. Equivalent to qrc_max in Cadence pdk_config.json.",
+    "layer_map_file": "TLUPlus layer map file, relative to the FC flow directory (not PDK root).",
+    "floorplan_file": "Flow-side Tcl floorplan script, relative to the FC flow directory. Empty string if none.",
+    "pdn_file": "Flow-side Tcl PDN (power delivery network) script, relative to the FC flow directory. Sourced after floorplan to build physical power network. Empty string if none.",
+    "routing.min_layer": "Minimum routing metal layer name.",
+    "routing.max_layer": "Maximum routing metal layer name.",
+    "routing.layer_direction_offset_list": "FC ROUTING_LAYER_DIRECTION_OFFSET_LIST: space-separated {layer direction offset} triples for all layers."
+  },
+  "SO3": {
+    "design_node": 3,
+    "site_name": "coresite",
+    "family_cell_name_regexp": "^(.+?)_X\\d+",
+    "power_net": "VDD",
+    "ground_net": "VSS",
+    "bufs_for_clock": "BUF_X*",
+    "invs_for_clock": "INV_X*",
+    "tech_file": "tf/6T_BEOL1_24_30_24_24_64_64_64_64_64_64_64_64_720_720.tf",
+    "tech_lef": "techlef/6T_BEOL1_24_30_24_24_64_64_64_64_64_64_64_64_720_720.tech.lef",
+    "macro_lef": [
+      "lef/*.lef"
+    ],
+    "worst_db": [
+      "db/*.db"
+    ],
+    "best_db": null,
+    "tlup_file": "tlup/PROBE.tlup",
+    "layer_map_file": "configs/layermap/SO3.map",
+    "floorplan_file": "scripts/floorplan.tcl",
+    "pdn_file": "",
+    "routing": {
+      "min_layer": "M0",
+      "max_layer": "M7",
+      "layer_direction_offset_list": "{M0 horizontal 0.012} {M1 vertical 0.030} {M2 horizontal 0.012} {M3 vertical 0.0} {M4 horizontal 0.0} {M5 vertical 0.0} {M6 horizontal 0.0} {M7 vertical 0.0} {M8 horizontal 0.0} {M9 vertical 0.0} {M10 horizontal 0.0} {M11 vertical 0.0} {M12 horizontal 0.0} {M13 vertical 0.0}"
+    }
+  }
+}

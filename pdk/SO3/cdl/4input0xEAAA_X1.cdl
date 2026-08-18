@@ -1,0 +1,15 @@
+4input0xEAAA_X1
+
+4input0xEAAA_X1
+
+.SUBCKT 4input0xEAAA_X1 A B C D VDD VSS Y
+** N=10 EP=7 FDC=8
+M0 Y A VDD VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=148 $Y=340 $dt=0
+M1 10 B Y VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=328 $Y=340 $dt=0
+M2 9 C 10 VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=508 $Y=340 $dt=0
+M3 VDD D 9 VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=688 $Y=340 $dt=0
+M4 7 A Y VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=148 $Y=52 $dt=1
+M5 VSS B 7 VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=328 $Y=52 $dt=1
+M6 7 C VSS VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=508 $Y=52 $dt=1
+M7 VSS D 7 VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=688 $Y=52 $dt=1
+.ends 4input0xEAAA_X1

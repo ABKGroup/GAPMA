@@ -1,0 +1,18 @@
+.SUBCKT LHQ_X1 D E Q VDD VSS 
+MM15 net4 E VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM14 net7 net4 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM13 net3 D VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM12 net5 net7 net3 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 net2 net4 net5 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM10 VSS net6 net2 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM9 net6 net5 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM8 Q net5 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM7 net4 E VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 net7 net4 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM5 net1 D VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM4 net5 net4 net1 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM3 net0 net7 net5 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 VDD net6 net0 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 net6 net5 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 Q net5 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

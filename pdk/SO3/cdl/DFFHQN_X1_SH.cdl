@@ -1,0 +1,26 @@
+.SUBCKT DFFHQN_X1_SH CLK D VDD VSS QN
+MM4 net10 net3 net12 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 VSS D net12 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 VDD D net16 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 net10 net4 net16 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 VSS net10 net8 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM7 VDD net10 net8 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM10 net10 net3 net15 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM11 VDD net8 net15 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM8 VSS net8 net9 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM9 net10 net4 net9 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM13 net8 net3 net1 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM12 net8 net4 net1 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM14 net7 net1 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM15 net7 net1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM16 VSS net7 net6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM17 net1 net3 net6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM18 net1 net4 net14 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM19 VDD net7 net14 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM20 net3 CLK VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM23 net4 net3 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM24 QN net1 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM21 net3 CLK VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM22 net4 net3 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM25 QN net1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

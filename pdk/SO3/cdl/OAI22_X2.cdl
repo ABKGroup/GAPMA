@@ -1,0 +1,10 @@
+.SUBCKT OAI22_X2 A1 A2 B1 B2 VDD VSS ZN
+MM7 VDD B2 net8 VDD pmos_rvt w=92.00n l=16n nfin=4
+MM6 ZN B1 net8 VDD pmos_rvt w=92.00n l=16n nfin=4
+MM4 net9 A1 ZN VDD pmos_rvt w=92.00n l=16n nfin=4
+MM5 VDD A2 net9 VDD pmos_rvt w=92.00n l=16n nfin=4
+MM3 VSS B2 net2 VSS nmos_rvt w=92.00n l=16n nfin=4
+MM2 VSS B1 net2 VSS nmos_rvt w=92.00n l=16n nfin=4
+MM0 ZN A1 net2 VSS nmos_rvt w=92.00n l=16n nfin=4
+MM1 ZN A2 net2 VSS nmos_rvt w=92.00n l=16n nfin=4
+.ENDS

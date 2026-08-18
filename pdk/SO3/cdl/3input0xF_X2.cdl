@@ -1,0 +1,13 @@
+.SUBCKT 3input0xF_X2 A B C VDD VSS Y
+* Canonical: 0b00011111
+* Function: Y = A+B·C [3 lits]
+* Transistors: 8
+MMP1 npM0 A VDD VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP2 Y_bar B npM0 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP3 Y_bar C npM0 VDD pmos_rvt W=92.0n L=16n nfin=4
+MP_inv Y Y_bar VDD VDD pmos_rvt W=92.0n L=16n nfin=4
+MMN0 Y_bar A VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN2 Y_bar B nsM1 VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN3 nsM1 C VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+MN_inv Y Y_bar VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+.ENDS

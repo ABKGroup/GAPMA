@@ -1,0 +1,152 @@
+--- a/src/lefin/lefin.cpp
++++ b/src/lefin/lefin.cpp
+@@ -119,6 +119,10 @@
+ void lefin::createLibrary()
+ {
+   _lib = dbLib::create(_db, _lib_name, _hier_delimeter);
++  if (_lib == NULL) {
++    notice(0, "Error: failed to create library (%s)\n", _lib_name);
++    return;
++  }
+   _lib->setLefUnits(_lef_units);
+   if (_left_bus_delimeter)
+     _lib->setBusDelimeters(_left_bus_delimeter, _right_bus_delimeter);
+@@ -187,6 +191,7 @@
+ //
+ bool lefin::addGeoms(dbObject* object, bool is_pin, lefiGeometries* geometry)
+ {
++  if (_tech == NULL) return false;
+   int          count = geometry->numItems();
+   dbTechLayer* layer = NULL;
+   int          dw    = 0;
+@@ -486,11 +491,13 @@
+ 
+ void lefin::caseSense(int caseSense)
+ {
++  if (_tech == NULL) return;
+   _tech->setNamesCaseSensitive(dbOnOffType(caseSense));
+ }
+ 
+ void lefin::clearance(const char* name)
+ {
++  if (_tech == NULL) return;
+   _tech->setClearanceMeasure(dbClMeasureType(name));
+ }
+ 
+@@ -501,6 +508,7 @@
+ 
+ void lefin::noWireExt(const char* name)
+ {
++  if (_tech == NULL) return;
+   _tech->setNoWireExtAtPin(dbOnOffType(name));
+ }
+ 
+@@ -549,6 +557,8 @@
+   if (!_create_tech)
+     return;
+ 
++  if (_tech == NULL) return;
++
+   if (_tech->findLayer(layer->name())) {
+     notice(0, "duplicate LAYER (%s) ignored\n", layer->name());
+     return;
+@@ -927,6 +937,8 @@
+     if (_lib == NULL)
+       createLibrary();
+ 
++    if (_lib == NULL) return;
++
+     _master = _lib->findMaster(name);
+ 
+     if (_master == NULL)
+@@ -1032,6 +1044,7 @@
+ 
+ void lefin::manufacturing(double num)
+ {
++  if (_tech == NULL) return;
+   _tech->setManufacturingGrid(dbdist(num));
+ }
+ 
+@@ -1048,6 +1061,8 @@
+   if (!_create_tech)
+     return;
+ 
++  if (_tech == NULL) return;
++
+   dbTechNonDefaultRule* dbrule
+       = dbTechNonDefaultRule::create(_tech, rule->name());
+ 
+@@ -1211,11 +1226,13 @@
+   }
+ 
+   //
+-  // Parse and install antenna info
++  // Parse and install antenna info (skip if no tech loaded)
+   //
+   int          i;
+   dbTechLayer* tply;
+ 
++  if (_tech != NULL) {
++
+   if (pin->lefiPin::hasAntennaPartialMetalArea())
+     for (i = 0; i < pin->lefiPin::numAntennaPartialMetalArea(); i++) {
+       tply = NULL;
+@@ -1353,6 +1370,8 @@
+     }
+   }
+ 
++  } // end if (_tech != NULL) — antenna info
++
+   bool created_mpins = false;
+   int  numPorts      = pin->lefiPin::numPorts();
+   for (i = 0; i < numPorts; i++) {
+@@ -1396,6 +1415,8 @@
+   if (_lib == NULL)
+     createLibrary();
+ 
++  if (_lib == NULL) return;
++
+   dbSite* site = _lib->findSite(lefsite->name());
+ 
+   if (site)
+@@ -1550,6 +1571,7 @@
+ 
+ void lefin::useMinSpacing(lefiUseMinSpacing* spacing)
+ {
++  if (_tech == NULL) return;
+   if (!strncasecmp(spacing->name(), "PIN", 3)) {
+     _tech->setUseMinSpacingPin(dbOnOffType(spacing->value()));
+   } else if (!strncasecmp(spacing->name(), "OBS", 3)) {
+@@ -1561,6 +1583,7 @@
+ 
+ void lefin::version(double num)
+ {
++  if (_tech == NULL) return;
+   _tech->setLefVersion(num);
+ }
+ 
+@@ -1569,6 +1592,8 @@
+   if (!_create_tech)
+     return;
+ 
++  if (_tech == NULL) return;
++
+   if (_tech->findVia(via->name())) {
+     notice(0, "VIA: duplicate VIA (%s) ignored...\n", via->name());
+     return;
+@@ -1701,6 +1726,7 @@
+ 
+ void lefin::viaRule(lefiViaRule* viaRule)
+ {
++  if (_tech == NULL) return;
+   if (viaRule->hasGenerate()) {
+     viaGenerateRule(viaRule);
+     return;
+@@ -1761,6 +1787,7 @@
+ 
+ void lefin::viaGenerateRule(lefiViaRule* viaRule)
+ {
++  if (_tech == NULL) return;
+   const char*            name = viaRule->name();
+   dbTechViaGenerateRule* rule
+       = dbTechViaGenerateRule::create(_tech, name, viaRule->hasDefault());

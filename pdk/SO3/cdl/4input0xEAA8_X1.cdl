@@ -1,0 +1,14 @@
+* Selected from final_4input0xFE80_X1.cdl:4input0xFE80_X1
+* Selection: 10T planar case, dummy=2, width_cols=15, transistors=10, objective=748
+.SUBCKT 4input0xEAA8_X1 A1 A2 A3 A4 VDD VSS Y
+MM0 n1 A1 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM1 Y A1 n2 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM2 Y A2 n1 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 n2 A3 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM4 n2 A4 n1 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 n3 A1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 Y A1 n4 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM7 n4 A2 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM8 Y A3 n3 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM9 n4 A4 n3 VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

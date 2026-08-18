@@ -1,0 +1,6 @@
+.SUBCKT NAND2_X2 A1 A2 VDD VSS ZN
+MM3 net16 A2 VSS VSS nmos_rvt w=92.00n l=16n nfin=4
+MM2 ZN A1 net16 VSS nmos_rvt w=92.00n l=16n nfin=4
+MM1 ZN A2 VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM0 ZN A1 VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+.ENDS

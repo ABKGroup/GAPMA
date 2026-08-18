@@ -1,0 +1,12 @@
+* Selected from final_4input0xFFE0_X1.cdl:4input0xFFE0_X1_spv1_ssv1
+* Selection: dummy=0, width_cols=9, transistors=8, objective=136, via_count=1
+.SUBCKT 4input0xEEEA_X1 A1 A2 A3 A4 VDD VSS Y
+MM0 Y A1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 p1 A3 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 p1 A4 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM3 Y A2 p1 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM4 n1 A1 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 VSS A2 n1 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM6 n2 A3 n1 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM7 VSS A4 n2 VSS nmos_rvt w=46.0n l=16n nfin=2
+.ENDS

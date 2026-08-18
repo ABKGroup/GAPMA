@@ -1,0 +1,15 @@
+.SUBCKT 4input0x0777_X2 A B C D VDD VSS Y
+* Canonical: 0b0000011101110111
+* Function: Y = (C+D)·(A+B) [4 lits]
+* Transistors: 10
+MMP1 npM0 C VDD VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP2 Y_bar D npM0 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP4 npM3 A VDD VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP5 Y_bar B npM3 VDD pmos_rvt W=92.0n L=16n nfin=4
+MP_inv Y Y_bar VDD VDD pmos_rvt W=92.0n L=16n nfin=4
+MMN1 Y_bar C nsM0 VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN2 Y_bar D nsM0 VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN3 nsM0 A VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN4 nsM0 B VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+MN_inv Y Y_bar VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+.ENDS

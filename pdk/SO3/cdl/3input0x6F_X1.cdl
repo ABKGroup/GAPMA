@@ -1,0 +1,27 @@
+* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *
+* CDL Netlist:                                              *
+*                                                           *
+* Cell Name  : 3input0x6F_X1                           *
+* Netlisted  : Sat May 23 00:23:03 2026                     *
+* Pegasus Version: 21.31-s008 Thu Jan 13 15:55:10 PST 2022  *
+* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *
+*.LDD
+
+* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *
+* Sub cell: 3input0x6F_X1                              *
+* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *
+.subckt 3input0x6F_X1 A1 A2 A3 VDD VSS Y
+** N=11 EP=6 FDC=12
+M0 Y A3 VDD VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=148 $Y=340
+M1 7 3 Y VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=328 $Y=340
+M2 7 A2 VDD VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=688 $Y=340
+M3 VDD A1 7 VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=868 $Y=340
+M4 10 A1 VDD VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=1048 $Y=340
+M5 3 A2 10 VDD pmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=1228 $Y=340
+M6 8 A3 Y VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=148 $Y=52
+M7 VSS 3 8 VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=328 $Y=52
+M8 11 A2 8 VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=688 $Y=52
+M9 VSS A1 11 VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=868 $Y=52
+M10 3 A1 VSS VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=1048 $Y=52
+M11 VSS A2 3 VSS nmos_rvt L=1.6e-08 W=4.6e-08 nfin=2 $X=1228 $Y=52
+.ends 3input0x6F_X1

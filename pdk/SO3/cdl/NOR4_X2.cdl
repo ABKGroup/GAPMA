@@ -1,0 +1,10 @@
+.SUBCKT NOR4_X2 A1 A2 A3 A4 VDD VSS ZN
+MM7 VSS A1 ZN VSS nmos_rvt w=92.0n l=16n nfin=4
+MM6 VSS A2 ZN VSS nmos_rvt w=92.0n l=16n nfin=4
+MM5 VSS A3 ZN VSS nmos_rvt w=92.0n l=16n nfin=4
+MM4 VSS A4 ZN VSS nmos_rvt w=92.0n l=16n nfin=4
+MM3 net30 A1 ZN VDD pmos_rvt w=92.0n l=16n nfin=4
+MM2 net20 A2 net30 VDD pmos_rvt w=92.0n l=16n nfin=4
+MM1 net10 A3 net20 VDD pmos_rvt w=92.0n l=16n nfin=4
+MM0 VDD A4 net10 VDD pmos_rvt w=92.0n l=16n nfin=4
+.ENDS

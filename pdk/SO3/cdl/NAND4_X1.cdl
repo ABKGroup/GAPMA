@@ -1,0 +1,10 @@
+.SUBCKT NAND4_X1 A1 A2 A3 A4 VDD VSS ZN
+MM7 net18 A4 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM6 net17 A3 net18 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 net16 A2 net17 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM4 ZN A1 net16 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 ZN A4 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 ZN A3 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 ZN A2 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 ZN A1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

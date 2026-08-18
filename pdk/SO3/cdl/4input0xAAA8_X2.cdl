@@ -1,0 +1,13 @@
+.SUBCKT 4input0xAAA8_X2 A B C D VDD VSS Y
+* Canonical: 0b0000000001111111
+* Function: Y = !(A+B·C·D) [4 lits, SOP was 4]
+* Transistors: 8
+MMP1 npM0 A VDD VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP2 Y B npM0 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP3 Y C npM0 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP4 Y D npM0 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMN0 Y A VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN3 Y B nsM1 VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN4 nsM1 C nsM2 VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN5 nsM2 D VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+.ENDS

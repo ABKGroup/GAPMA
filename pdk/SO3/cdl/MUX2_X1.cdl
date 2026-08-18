@@ -1,0 +1,14 @@
+.SUBCKT MUX2_X1 I0 I1 S VDD VSS Z
+MM11 Z net5 VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM10 VSS I0 net6 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM9 net6 net2 net5 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM8 net5 S net4 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM7 VSS I1 net4 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM6 net2 S VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 Z net5 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM4 VDD I0 net11 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM3 net11 S net5 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 net5 net2 net10 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 VDD I1 net10 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 net2 S VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

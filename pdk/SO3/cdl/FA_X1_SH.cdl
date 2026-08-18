@@ -1,0 +1,26 @@
+.SUBCKT FA_X1_SH A B CI CON SN VDD VSS
+MM22 SN CI net081 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM21 net081 B net082 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM20 net082 A VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM15 SN CON net027 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM14 net027 CI VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM13 net027 B VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM12 net027 A VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM5 CON A net37 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM6 net37 B VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 net27 B VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 CON CI net27 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 net27 A VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM25 SN CI net080 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM24 net080 B net079 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM23 net079 A VSS VSS nmos_rvt w=46.0n l=16n nfin=2
+MM19 VSS CI net067 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM18 VSS B net067 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM17 VSS A net067 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM16 net067 CON SN VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 VSS B net25 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM10 VSS B net36 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM9 VSS A net25 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM8 net36 A CON VSS nmos_rvt w=46.0n l=16n nfin=2
+MM7 net25 CI CON VSS nmos_rvt w=46.0n l=16n nfin=2
+.ENDS

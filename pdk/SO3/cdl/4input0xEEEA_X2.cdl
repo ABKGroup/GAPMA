@@ -1,0 +1,10 @@
+.SUBCKT 4input0xEEEA_X2 A1 A2 A3 A4 VDD VSS Y
+MM0 Y A1 VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM1 p1 A3 VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM2 p1 A4 VDD VDD pmos_rvt w=92.0n l=16n nfin=4
+MM3 Y A2 p1 VDD pmos_rvt w=92.0n l=16n nfin=4
+MM4 n1 A1 Y VSS nmos_rvt w=92.0n l=16n nfin=4
+MM5 VSS A2 n1 VSS nmos_rvt w=92.0n l=16n nfin=4
+MM6 n2 A3 n1 VSS nmos_rvt w=92.0n l=16n nfin=4
+MM7 VSS A4 n2 VSS nmos_rvt w=92.0n l=16n nfin=4
+.ENDS

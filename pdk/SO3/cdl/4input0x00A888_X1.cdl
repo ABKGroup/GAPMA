@@ -1,0 +1,18 @@
+* selected_from: 4input0xF800_X1_spv1_ssv1
+* source_file: ck_server/moore/final.cdl
+* ck_server_log: ck_server/moore/notopo_dummy0_parallel/4input0xF800_X1/4input0xF800_X1_spv1_ssv1_notopo_dummy0.full.log
+* dummy_for_ideal: 0
+* width_cols: 9
+* transistor_count: 8
+* objective: 173.0
+* via_count: 0
+.SUBCKT 4input0x00A888_X1 A1 A2 A3 A4 VDD VSS Y
+MM0 p1 A2 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 p2 A3 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 p1 A4 p2 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM3 Y A1 p1 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM4 VSS A1 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 n1 A2 Y VSS nmos_rvt w=46.0n l=16n nfin=2
+MM6 VSS A3 n1 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM7 VSS A4 n1 VSS nmos_rvt w=46.0n l=16n nfin=2
+.ENDS 4input0x00A888_X1

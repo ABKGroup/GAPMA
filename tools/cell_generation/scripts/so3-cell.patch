@@ -1,0 +1,1033 @@
+diff --git a/Framework/CellGen/bin/run_cell.py b/Framework/CellGen/bin/run_cell.py
+index 383fb69..3423e63 100644
+--- a/Framework/CellGen/bin/run_cell.py
++++ b/Framework/CellGen/bin/run_cell.py
+@@ -4,2 +4,3 @@ import json
+ import os
++import re
+ import subprocess
+@@ -13,2 +14,16 @@ SRC = ROOT / "src"
+ 
++def parse_cdl_ports(cdl_file: str, cell_name: str):
++    """Return the ordered list of port names for cell_name in cdl_file."""
++    with open(cdl_file, encoding="utf-8") as f:
++        for line in f:
++            m = re.match(
++                r"\.SUBCKT\s+" + re.escape(cell_name) + r"\s+(.+)",
++                line,
++                re.IGNORECASE,
++            )
++            if m:
++                return m.group(1).split()
++    return []
++
++
+ def pick_ilp_script(flow: str, arch: str) -> Path:
+@@ -23,3 +38,5 @@ def pick_ilp_script(flow: str, arch: str) -> Path:
+     except KeyError as e:
+-        raise SystemExit(f"ERROR: unsupported flow/arch combination: {flow}/{arch}") from e
++        raise SystemExit(
++            f"ERROR: unsupported flow/arch combination: {flow}/{arch}"
++        ) from e
+ 
+@@ -50,2 +67,13 @@ def main():
+     ap.add_argument("--partition", choices=["N", "LR", "H"], default="N")
++    ap.add_argument(
++        "--no-topology-opt",
++        action="store_true",
++        help="Disable circuit topology optimization (SO3 SH only)",
++    )
++    ap.add_argument(
++        "--phase",
++        choices=["both", "placement", "routing"],
++        default="both",
++        help="ILP phase: both, placement only, or routing only (SO3 SH only)",
++    )
+ 
+@@ -62,7 +90,14 @@ def main():
+     ap.add_argument("--python", default=sys.executable)
+-    ap.add_argument("--arch", choices=["SH", "DH"], default="SH",
+-                    help="Cell architecture: SH (single-height) or DH (double-height)")
+-    ap.add_argument("--mh-order", choices=["N_FIRST", "P_FIRST"], default="N_FIRST",
+-                    help="When --arch=DH, choose transistor row order")
+-
++    ap.add_argument(
++        "--arch",
++        choices=["SH", "DH"],
++        default="SH",
++        help="Cell architecture: SH (single-height) or DH (double-height)",
++    )
++    ap.add_argument(
++        "--mh-order",
++        choices=["N_FIRST", "P_FIRST"],
++        default="N_FIRST",
++        help="When --arch=DH, choose transistor row order",
++    )
+     ap.add_argument(
+@@ -72,2 +107,7 @@ def main():
+     )
++    ap.add_argument(
++        "--out-cell-name",
++        default=None,
++        help="Override the output cell name. Only valid when one input cell is provided.",
++    )
+     ap.add_argument("--klayout", default="klayout")
+@@ -77,3 +117,5 @@ def main():
+ 
+-    # Decide ILP script
++    if args.out_cell_name and len(args.cell) != 1:
++        raise SystemExit("ERROR: --out-cell-name can only be used with a single --cell.")
++
+     if args.ilp_script:
+@@ -86,10 +128,12 @@ def main():
+ 
+-    input_cells = args.cell
+-    cells_out = []
+-
+     successful_cells = []
++    port_nets_map = {}
+ 
+-    for cell in input_cells:
+-        out_name = derive_out_name(cell, args.arch, args.mh_order)
+-        cells_out.append(out_name)
++    for cell in args.cell:
++        out_name = (
++            args.out_cell_name
++            if args.out_cell_name
++            else derive_out_name(cell, args.arch, args.mh_order)
++        )
++        port_nets_map[out_name] = parse_cdl_ports(args.cdl, cell)
+ 
+@@ -98,9 +142,16 @@ def main():
+             str(ilp_script),
+-            "--cdl", args.cdl,
+-            "--cell", cell,
+-            "--dummy-for-ideal", str(args.dummy_for_ideal),
+-            "--dummy-padding", str(args.dummy_padding),
+-            "--misalign-col", str(args.misalign_col),
+-            "--out-cell-name", out_name,
+-            "--partition", args.partition,
++            "--cdl",
++            args.cdl,
++            "--cell",
++            cell,
++            "--dummy-for-ideal",
++            str(args.dummy_for_ideal),
++            "--dummy-padding",
++            str(args.dummy_padding),
++            "--misalign-col",
++            str(args.misalign_col),
++            "--out-cell-name",
++            out_name,
++            "--partition",
++            args.partition,
+         ]
+@@ -109,2 +160,6 @@ def main():
+             ilp_cmd += ["--mh-order", args.mh_order]
++        if args.no_topology_opt and args.flow == "SO3" and args.arch != "DH":
++            ilp_cmd += ["--no-topology-opt"]
++        if args.phase != "both" and args.flow == "SO3" and args.arch != "DH":
++            ilp_cmd += ["--phase", args.phase]
+ 
+@@ -112,3 +167,3 @@ def main():
+         try:
+-            subprocess.run(ilp_cmd, check=True)
++            subprocess.run(ilp_cmd, check=True, cwd=str(ROOT))
+             successful_cells.append(out_name)
+@@ -117,3 +172,3 @@ def main():
+             print(f"[ERROR] ILP failed for cell: {cell}")
+-            print("[INFO] GDS generation is skipped because no valid ILP solution was produced.")
++            print("[INFO] GDS generation is skipped for this cell.")
+             print("[GUIDE] Please try one or more of the following:")
+@@ -123,3 +178,3 @@ def main():
+             continue
+-    
++
+     if not successful_cells:
+@@ -129,5 +184,7 @@ def main():
+ 
+-    # Which names should GDS use?
+-    gds_cells = successful_cells
++    if args.phase == "placement":
++        print("[SKIP] GDS generation (placement phase only)")
++        return
+ 
++    gds_cells = args.cells or successful_cells
+     cfg = {
+@@ -137,2 +194,3 @@ def main():
+         "mh_order": args.mh_order if args.arch == "DH" else "N_FIRST",
++        "port_nets": port_nets_map,
+     }
+@@ -146,6 +204,6 @@ def main():
+ 
+-    kl_cmd = [args.klayout, "-b", "-r", args.gdsgen_script]
++    kl_cmd = [args.klayout, "-b", "-r", args.gdsgen-script]
+     print("[RUN]", " ".join(kl_cmd))
+     try:
+-        subprocess.run(kl_cmd, check=True, env=env)
++        subprocess.run(kl_cmd, check=True, env=env, cwd=str(ROOT))
+     finally:
+diff --git a/Framework/CellGen/run_cell.sh b/Framework/CellGen/run_cell.sh
+index 03187ca..2bfd8a2 100755
+--- a/Framework/CellGen/run_cell.sh
++++ b/Framework/CellGen/run_cell.sh
+@@ -3,2 +3,7 @@ set -euo pipefail
+ 
++# Set up Cadence tool environment (license + klayout)
++source /etc/profile.d/modules.sh
++module load innovus/21.1
++module load ruby/2.5.9 klayout/0.30.5
++
+ # repo root
+@@ -25,3 +30,2 @@ MISALIGN_COL="${MISALIGN_COL:-0}"
+ ARCH="${ARCH:-SH}"                # SH | DH
+-# MH_ORDER used only when ARCH=DH
+ MH_ORDER="${MH_ORDER:-N_FIRST}"   # N_FIRST | P_FIRST
+@@ -29,2 +33,4 @@ FLOW="${FLOW:-SO3}"               # SO2 | SO3
+ PARTITION="${PARTITION:-N}"       # N | LR | H
++NO_TOPOLOGY_OPT="${NO_TOPOLOGY_OPT:-0}"
++PHASE="${PHASE:-both}"            # both | placement | routing
+ 
+@@ -44,11 +50,14 @@ Options:
+   --gds-out <dir>            GDS output directory
+-  --dummy-for-ideal N    DUMMY_FOR_IDEAL value
+-  --dummy-padding N      DUMMY_PADDING value
+-  --misalign-col N       MISALIGN_COL value
+-  --arch SH|DH           Cell architecture (default: SH)
+-  --mh-order N_FIRST|P_FIRST  Only used when ARCH=DH
+-  --flow SO2|SO3         SO2 do not touch the circuit
+-  --partition N|LR|H     Only for 2Bit Flip-Flop
+-  --python <path>        Python interpreter (default: python3)
+-  --klayout <path>       KLayout executable (default: klayout)
++  --dummy-for-ideal N        DUMMY_FOR_IDEAL value
++  --dummy-padding N          DUMMY_PADDING value
++  --misalign-col N           MISALIGN_COL value
++  --arch SH|DH               Cell architecture (default: SH)
++  --mh-order N_FIRST|P_FIRST Only used when ARCH=DH
++  --flow SO2|SO3             SO2 or SO3 ILP family
++  --partition N|LR|H         Partition mode
++  --no-topology-opt          Disable circuit topology optimization (SO3 SH only)
++  --phase both|placement|routing
++                             Split SO3 SH into placement/routing phases
++  --python <path>            Python interpreter (default: python3)
++  --klayout <path>           KLayout executable (default: klayout)
+   -h, --help
+@@ -56,5 +65,6 @@ Options:
+ Behavior:
+-  1) --cdl-name SO3_L1   → Generate all .SUBCKT entries in SO3_L1.cdl
+-  2) --cdl <file> --cells "INV_X1 NAND2_X1" → Generate only those cells
++  1) --cdl-name SO3_L1   -> Generate all .SUBCKT entries in SO3_L1.cdl
++  2) --cdl <file> --cells "INV_X1 NAND2_X1" -> Generate only those cells
+   3) Run with no args to show this help.
++
+ Notes:
+@@ -98,2 +108,6 @@ while [ $# -gt 0 ]; do
+       PARTITION="$2"; shift 2 ;;
++    --no-topology-opt)
++      NO_TOPOLOGY_OPT=1; shift ;;
++    --phase)
++      PHASE="$2"; shift 2 ;;
+     --python)
+@@ -159,3 +173,2 @@ apply_defaults_for_cell() {
+   local cell="$1"
+-
+   local local_flow="$FLOW"
+@@ -186,3 +199,2 @@ apply_defaults_for_cell() {
+     *)
+-      # partition is blocked for all non-2BDFFHQN_X1 cells
+       local_partition="N"
+@@ -197,28 +209,26 @@ for cell in "${CELLS[@]}"; do
+ 
+-  echo "[RUN]" "$PYTHON" "$RUNNER" \
+-    --cdl "$CDL" \
+-    --cell "$cell" \
+-    --dummy-for-ideal "$DUMMY_FOR_IDEAL" \
+-    --dummy-padding "$DUMMY_PADDING" \
+-    --misalign-col "$EFF_MISALIGN" \
+-    --gds-out "$GDS_OUT" \
+-    --arch "$ARCH" \
+-    --mh-order "$MH_ORDER" \
+-    --flow "$EFF_FLOW" \
+-    --partition "$EFF_PARTITION" \
++  cmd=(
++    "$PYTHON" "$RUNNER"
++    --cdl "$CDL"
++    --cell "$cell"
++    --dummy-for-ideal "$DUMMY_FOR_IDEAL"
++    --dummy-padding "$DUMMY_PADDING"
++    --misalign-col "$EFF_MISALIGN"
++    --gds-out "$GDS_OUT"
++    --arch "$ARCH"
++    --mh-order "$MH_ORDER"
++    --flow "$EFF_FLOW"
++    --partition "$EFF_PARTITION"
+     --klayout "$KLAYOUT"
++  )
+ 
+-  if ! "$PYTHON" "$RUNNER" \
+-    --cdl "$CDL" \
+-    --cell "$cell" \
+-    --dummy-for-ideal "$DUMMY_FOR_IDEAL" \
+-    --dummy-padding "$DUMMY_PADDING" \
+-    --misalign-col "$EFF_MISALIGN" \
+-    --gds-out "$GDS_OUT" \
+-    --arch "$ARCH" \
+-    --mh-order "$MH_ORDER" \
+-    --flow "$EFF_FLOW" \
+-    --partition "$EFF_PARTITION" \
+-    --klayout "$KLAYOUT"
+-  then
++  if [ "$NO_TOPOLOGY_OPT" = "1" ] && [ "$EFF_FLOW" = "SO3" ] && [ "$ARCH" != "DH" ]; then
++    cmd+=(--no-topology-opt)
++  fi
++  if [ "$PHASE" != "both" ] && [ "$EFF_FLOW" = "SO3" ] && [ "$ARCH" != "DH" ]; then
++    cmd+=(--phase "$PHASE")
++  fi
++
++  echo "[RUN]" "${cmd[@]}"
++  if ! "${cmd[@]}"; then
+     echo "[WARN] run_cell.py failed for $cell; continue to next cell"
+diff --git a/Framework/CellGen/src/ILP_SO3_DH_flex.py b/Framework/CellGen/src/ILP_SO3_DH_flex.py
+index e04a797..bec1682 100644
+--- a/Framework/CellGen/src/ILP_SO3_DH_flex.py
++++ b/Framework/CellGen/src/ILP_SO3_DH_flex.py
+@@ -1,2 +1,3 @@
+ import re
++import os
+ import gurobipy as gp
+@@ -12,7 +13,9 @@ model = gp.Model("transistor_placement")
+ model.setParam('OutputFlag', 1)  # Suppress Gurobi output
++model.setParam('Threads', int(os.environ.get('CELLGEN_THREADS', 0)))  # 0 = use all available CPUs
++model.setParam('TimeLimit', int(os.environ.get('CELLGEN_TIMELIMIT', 43200)))  # 12h default
++model.setParam('Method', 2)  # Barrier: multi-threaded root LP. Gurobi: -1=auto, 0=Primal Simplex, 1=Dual Simplex, 2=Barrier, 3=Concurrent
+ #model.setParam('Presolve', 2)
+-#model.setParam("Method", 1) # Method=0 default. / Method=1: Primal Simplex. / Method=2: Dual Simplex. / Method=3: Barrier.
+ #model.setParam("NodeMethod", 2)
+-#model.setParam("BarIterLimit", 1000) # for method 3
+-#model.setParam("Crossover", 0) # for method 3
++#model.setParam("BarIterLimit", 1000)
++#model.setParam("Crossover", 0)
+ model.setParam('LogFile', 'gurobi.log')
+@@ -1485,10 +1488,10 @@ if routing_switch == 'on':
+ 	# local hole blocking
+-        for net in total_nets:
+-            if net not in power_net and net != new_net_name:
+-                for r in rows:
+-                    for c in columns[1:-1]:
+-                        model.addConstr(
+-                            t_n_c_r[net][c, r] <= t_n_c_r[net][c-1, r] + t_n_c_r[net][c+1, r],
+-                            name=f"no_len1_island_{net}_{c}_{r}"
+-                        )
++	for net in total_nets:
++	    if net not in power_net and net != new_net_name:
++	        for r in rows:
++	            for c in columns[1:-1]:
++	                model.addConstr(
++	                    t_n_c_r[net][c, r] <= t_n_c_r[net][c-1, r] + t_n_c_r[net][c+1, r],
++	                    name=f"no_len1_island_{net}_{c}_{r}"
++	                )
+ 	# Cell-Flex
+@@ -1733,3 +1736,72 @@ if model.status == GRB.OPTIMAL:
+                     #print ("N",net,h,c)
+-    
++
++    # ── Optimized CDL output (DH: mirrors SH ILP behavior) ──
++    cdl_placement = {}
++    for i, t in enumerate(top_trans):
++        for h in height:
++            for c in gate_cols[h]:
++                for o in [0, 1]:
++                    if c_top[(i, h, c, o)].X > 0.5:
++                        cdl_placement[t[0]] = (h, c, o, 'pmos')
++    for j, t in enumerate(bot_trans):
++        for h in height:
++            for c in gate_cols[h]:
++                for o in [0, 1]:
++                    if c_bot[(j, h, c, o)].X > 0.5:
++                        cdl_placement[t[0]] = (h, c, o, 'nmos')
++    # A transistor the ILP never placed has no columns backing it, so its
++    # original connectivity describes a circuit the GDS does not implement.
++    # Check before opening the file so no partial CDL is left behind.
++    unplaced = [t[0] for t in top_trans if t[0] not in cdl_placement]
++    unplaced += [t[0] for t in bot_trans if t[0] not in cdl_placement]
++    if unplaced:
++        raise RuntimeError(
++            "ILP produced no placement for transistor(s) "
++            + ", ".join(unplaced)
++            + f" in cell '{subckt_name}'. Refusing to write an optimized CDL "
++              "that asserts original connectivity the layout does not have."
++        )
++
++    cdl_path = f"{cell_name_for_io}.cdl"
++    with open(cdl_path, 'w', encoding='utf-8') as cf:
++        cf.write(f".SUBCKT {subckt_name} {' '.join(io_pins)}\n")
++        for t in top_trans:
++            name, G_orig, D_orig, S_orig, B, nfin = t
++            if name in cdl_placement:
++                h, c, o, mos_type = cdl_placement[name]
++                cols = pmos_columns[h]
++                num_c = len(cols)
++                if o == 0:
++                    s_net = cols[c - 1] if (c - 1 >= 0 and cols[c - 1] is not None) else S_orig
++                    d_net = cols[c + 1] if (c + 1 < num_c and cols[c + 1] is not None) else D_orig
++                else:
++                    s_net = cols[c + 1] if (c + 1 < num_c and cols[c + 1] is not None) else S_orig
++                    d_net = cols[c - 1] if (c - 1 >= 0 and cols[c - 1] is not None) else D_orig
++                gate_net = cols[c]
++                cf.write(f"{name} {d_net} {gate_net} {s_net} {B} pmos_rvt W=46.0n L=16n nfin={nfin}\n")
++            else:
++                raise AssertionError(
++                    f"unplaced PMOS transistor '{name}' reached the CDL writer"
++                )
++        for t in bot_trans:
++            name, G_orig, D_orig, S_orig, B, nfin = t
++            if name in cdl_placement:
++                h, c, o, mos_type = cdl_placement[name]
++                cols = nmos_columns[h]
++                num_c = len(cols)
++                if o == 0:
++                    s_net = cols[c - 1] if (c - 1 >= 0 and cols[c - 1] is not None) else S_orig
++                    d_net = cols[c + 1] if (c + 1 < num_c and cols[c + 1] is not None) else D_orig
++                else:
++                    s_net = cols[c + 1] if (c + 1 < num_c and cols[c + 1] is not None) else S_orig
++                    d_net = cols[c - 1] if (c - 1 >= 0 and cols[c - 1] is not None) else D_orig
++                gate_net = cols[c]
++                cf.write(f"{name} {d_net} {gate_net} {s_net} {B} nmos_rvt W=46.0n L=16n nfin={nfin}\n")
++            else:
++                raise AssertionError(
++                    f"unplaced NMOS transistor '{name}' reached the CDL writer"
++                )
++        cf.write(".ENDS\n")
++    print(f"Optimized CDL written to: {cdl_path}")
++
+     if mh_order == 'P_FIRST':
+diff --git a/Framework/CellGen/src/ILP_SO3_SH_flex.py b/Framework/CellGen/src/ILP_SO3_SH_flex.py
+index 98645f7..25e4a11 100644
+--- a/Framework/CellGen/src/ILP_SO3_SH_flex.py
++++ b/Framework/CellGen/src/ILP_SO3_SH_flex.py
+@@ -5,3 +5,3 @@ print(gp.__version__)
+ from gurobipy import GRB
+-import time, math
++import time, math, json, os
+ import argparse
+@@ -12,7 +12,9 @@ model = gp.Model("transistor_placement")
+ model.setParam('OutputFlag', 1)  # Suppress Gurobi output
++model.setParam('Threads', int(os.environ.get('CELLGEN_THREADS', 0)))  # 0 = use all available CPUs
++model.setParam('TimeLimit', int(os.environ.get('CELLGEN_TIMELIMIT', 43200)))  # 12h default
++model.setParam('Method', 2)  # Barrier: multi-threaded root LP. Gurobi: -1=auto, 0=Primal Simplex, 1=Dual Simplex, 2=Barrier, 3=Concurrent
+ #model.setParam('Presolve', 2)
+-#model.setParam("Method", 1) # Method=0 default. / Method=1: Primal Simplex. / Method=2: Dual Simplex. / Method=3: Barrier.
+ #model.setParam("NodeMethod", 2)
+-#model.setParam("BarIterLimit", 1000) # for method 3
+-#model.setParam("Crossover", 0) # for method 3
++#model.setParam("BarIterLimit", 1000)
++#model.setParam("Crossover", 0)
+ model.setParam('LogFile', 'gurobi.log')
+@@ -36,2 +38,12 @@ def parse_args():
+                help="Partition mode: N=no partition, LR=left/right, H=height")
++    p.add_argument("--no-topology-opt", action="store_true",
++                help="Disable circuit topology optimization (fix S/D to original CDL)")
++    p.add_argument("--phase", choices=["both", "placement", "routing"], default="both",
++                help="ILP phase: 'both' (default), 'placement' only, or 'routing' only")
++    p.add_argument("--pool-size", type=int, default=1,
++                help="Number of placement solutions to save when --phase placement (default=1)")
++    p.add_argument("--placement-file", default=None,
++                help="Override placement JSON path for --phase routing (default: <cell>.placement.json)")
++    p.add_argument("--verify-fast-pnr", default=None, metavar="FILE",
++                help="Fix placement+routing from fast_pnr output and check feasibility only (SAT/UNSAT)")
+     return p.parse_args()
+@@ -42,2 +54,7 @@ cell_name_for_io = args.out_cell_name or args.cell
+ 
++# Routing only needs a feasible solution, not optimal.
++if args.phase == "routing":
++    model.setParam('MIPFocus', 1)      # prioritize finding feasible solutions
++    model.setParam('Heuristics', 0.5)  # more heuristic effort
++
+ if not cell_name:
+@@ -58,3 +75,6 @@ power_net={'VDD','VSS'}
+ # for routing
+-routing_switch = 'on'
++if args.phase == 'placement':
++    routing_switch = 'off'
++else:
++    routing_switch = 'on'
+ bbox = 0 # bounding box for routing
+@@ -175,2 +195,11 @@ for line in lines:
+ 
++            # Store original CDL line info for optimized CDL generation
++            if not hasattr(parse_args, '_cdl_trans'):
++                parse_args._cdl_trans = []
++            parse_args._cdl_trans.append({
++                'name': name, 'D': D, 'G': G, 'S': S, 'B': B,
++                'type': ttype, 'params': param_str,
++                'is_pmos': 'pmos' in ttype,
++            })
++
+ print (net_count)
+@@ -315,20 +344,23 @@ total_nets = (
+ # Circuit Topology Optimization
+-print (f"------------")
+-print (f"analyze PMOS")
+-final_hierarchy_pmos = split_sets_by_paths_2(top_trans, 'VDD', shared_sd, total_pmos_sd_nets)
+-pmos_network={}
+-pmos_source={}
+-pmos_drain={}
+-add_constraints_recursive(model, final_hierarchy_pmos, pmos_network, pmos_source, pmos_drain)
+-
+-print (f"------------")
+-print (f"analyze NMOS")
+-final_hierarchy_nmos = split_sets_by_paths_2(bot_trans, 'VSS', shared_sd, total_nmos_sd_nets)
+-nmos_network={}
+-nmos_source={}
+-nmos_drain={}
+-add_constraints_recursive(model, final_hierarchy_nmos, nmos_network, nmos_source, nmos_drain)
+-
+-final_pmos_net_info=build_final_variables_and_constraints(pmos_source,pmos_drain,model)
+-final_nmos_net_info=build_final_variables_and_constraints(nmos_source,nmos_drain,model)
++final_pmos_net_info = {}
++final_nmos_net_info = {}
++if not args.no_topology_opt:
++    print (f"------------")
++    print (f"analyze PMOS")
++    final_hierarchy_pmos = split_sets_by_paths_2(top_trans, 'VDD', shared_sd, total_pmos_sd_nets)
++    pmos_network={}
++    pmos_source={}
++    pmos_drain={}
++    add_constraints_recursive(model, final_hierarchy_pmos, pmos_network, pmos_source, pmos_drain)
++
++    print (f"------------")
++    print (f"analyze NMOS")
++    final_hierarchy_nmos = split_sets_by_paths_2(bot_trans, 'VSS', shared_sd, total_nmos_sd_nets)
++    nmos_network={}
++    nmos_source={}
++    nmos_drain={}
++    add_constraints_recursive(model, final_hierarchy_nmos, nmos_network, nmos_source, nmos_drain)
++
++    final_pmos_net_info=build_final_variables_and_constraints(pmos_source,pmos_drain,model)
++    final_nmos_net_info=build_final_variables_and_constraints(nmos_source,nmos_drain,model)
+ 
+@@ -418,13 +450,14 @@ for i,t in enumerate(top_trans):
+         model.addConstr(c_top[(i, c, 0)] + c_top[(i, c, 1)] <= pmos_net[(G, c)],name=f"pmos_net_G_{name}_col_{c}_o")
+-        for key in final_pmos_net_info[t]['source']:
+-            model.addConstr(c_top[(i, c, 0)] + final_pmos_net_info[t]['source'][key] - 1 <= pmos_net[(key, c - 1)],name=f"pmos_net_S_{name}_col_{c-1}_o0")
+-            model.addConstr(c_top[(i, c, 1)] + final_pmos_net_info[t]['source'][key] - 1 <= pmos_net[(key, c + 1)],name=f"pmos_net_S_{name}_col_{c+1}_o1")
+-        for key in final_pmos_net_info[t]['drain']:
+-            model.addConstr(c_top[(i, c, 0)] + final_pmos_net_info[t]['drain'][key] - 1 <= pmos_net[(key, c + 1)],name=f"pmos_net_D_{name}_col_{c+1}_o0")
+-            model.addConstr(c_top[(i, c, 1)] + final_pmos_net_info[t]['drain'][key] - 1 <= pmos_net[(key, c - 1)],name=f"pmos_net_D_{name}_col_{c-1}_o1")
+-
+-        # model.addConstr(c_top[(i, c, 0)] <= pmos_net[(S, c - 1)],name=f"pmos_net_S_{name}_col_{c-1}_o0")
+-        # model.addConstr(c_top[(i, c, 0)] <= pmos_net[(D, c + 1)],name=f"pmos_net_D_{name}_col_{c+1}_o0")
+-        # model.addConstr(c_top[(i, c, 1)] <= pmos_net[(D, c - 1)],name=f"pmos_net_D_{name}_col_{c-1}_o1")
+-        # model.addConstr(c_top[(i, c, 1)] <= pmos_net[(S, c + 1)],name=f"pmos_net_S_{name}_col_{c+1}_o1")
++        if args.no_topology_opt:
++            model.addConstr(c_top[(i, c, 0)] <= pmos_net[(S, c - 1)],name=f"pmos_net_S_{name}_col_{c-1}_o0")
++            model.addConstr(c_top[(i, c, 0)] <= pmos_net[(D, c + 1)],name=f"pmos_net_D_{name}_col_{c+1}_o0")
++            model.addConstr(c_top[(i, c, 1)] <= pmos_net[(D, c - 1)],name=f"pmos_net_D_{name}_col_{c-1}_o1")
++            model.addConstr(c_top[(i, c, 1)] <= pmos_net[(S, c + 1)],name=f"pmos_net_S_{name}_col_{c+1}_o1")
++        else:
++            for key in final_pmos_net_info[t]['source']:
++                model.addConstr(c_top[(i, c, 0)] + final_pmos_net_info[t]['source'][key] - 1 <= pmos_net[(key, c - 1)],name=f"pmos_net_S_{name}_col_{c-1}_o0")
++                model.addConstr(c_top[(i, c, 1)] + final_pmos_net_info[t]['source'][key] - 1 <= pmos_net[(key, c + 1)],name=f"pmos_net_S_{name}_col_{c+1}_o1")
++            for key in final_pmos_net_info[t]['drain']:
++                model.addConstr(c_top[(i, c, 0)] + final_pmos_net_info[t]['drain'][key] - 1 <= pmos_net[(key, c + 1)],name=f"pmos_net_D_{name}_col_{c+1}_o0")
++                model.addConstr(c_top[(i, c, 1)] + final_pmos_net_info[t]['drain'][key] - 1 <= pmos_net[(key, c - 1)],name=f"pmos_net_D_{name}_col_{c-1}_o1")
+ 
+@@ -449,12 +482,14 @@ for j,t in enumerate(bot_trans):
+         model.addConstr(c_bot[(j, c, 0)] + c_bot[(j, c, 1)] <= nmos_net[(G, c)],name=f"nmos_net_G_{name}_col_{c}_o")
+-        for key in final_nmos_net_info[t]['source']:
+-            model.addConstr(c_bot[(j, c, 0)] + final_nmos_net_info[t]['source'][key] - 1 <= nmos_net[(key, c - 1)],name=f"nmos_net_S_{name}_col_{c-1}_o0")
+-            model.addConstr(c_bot[(j, c, 1)] + final_nmos_net_info[t]['source'][key] - 1 <= nmos_net[(key, c + 1)],name=f"nmos_net_S_{name}_col_{c+1}_o1")
+-        for key in final_nmos_net_info[t]['drain']:
+-            model.addConstr(c_bot[(j, c, 0)] + final_nmos_net_info[t]['drain'][key] - 1 <= nmos_net[(key, c + 1)],name=f"nmos_net_D_{name}_col_{c+1}_o0")
+-            model.addConstr(c_bot[(j, c, 1)] + final_nmos_net_info[t]['drain'][key] - 1 <= nmos_net[(key, c - 1)],name=f"nmos_net_D_{name}_col_{c-1}_o1")
+-        # model.addConstr(c_bot[(j, c, 0)] <= nmos_net[(S, c - 1)],name=f"nmos_net_S_{name}_col_{c-1}_o0")
+-        # model.addConstr(c_bot[(j, c, 0)] <= nmos_net[(D, c + 1)],name=f"nmos_net_D_{name}_col_{c+1}_o0")
+-        # model.addConstr(c_bot[(j, c, 1)] <= nmos_net[(D, c - 1)],name=f"nmos_net_D_{name}_col_{c-1}_o1")
+-        # model.addConstr(c_bot[(j, c, 1)] <= nmos_net[(S, c + 1)],name=f"nmos_net_S_{name}_col_{c+1}_o1")
++        if args.no_topology_opt:
++            model.addConstr(c_bot[(j, c, 0)] <= nmos_net[(S, c - 1)],name=f"nmos_net_S_{name}_col_{c-1}_o0")
++            model.addConstr(c_bot[(j, c, 0)] <= nmos_net[(D, c + 1)],name=f"nmos_net_D_{name}_col_{c+1}_o0")
++            model.addConstr(c_bot[(j, c, 1)] <= nmos_net[(D, c - 1)],name=f"nmos_net_D_{name}_col_{c-1}_o1")
++            model.addConstr(c_bot[(j, c, 1)] <= nmos_net[(S, c + 1)],name=f"nmos_net_S_{name}_col_{c+1}_o1")
++        else:
++            for key in final_nmos_net_info[t]['source']:
++                model.addConstr(c_bot[(j, c, 0)] + final_nmos_net_info[t]['source'][key] - 1 <= nmos_net[(key, c - 1)],name=f"nmos_net_S_{name}_col_{c-1}_o0")
++                model.addConstr(c_bot[(j, c, 1)] + final_nmos_net_info[t]['source'][key] - 1 <= nmos_net[(key, c + 1)],name=f"nmos_net_S_{name}_col_{c+1}_o1")
++            for key in final_nmos_net_info[t]['drain']:
++                model.addConstr(c_bot[(j, c, 0)] + final_nmos_net_info[t]['drain'][key] - 1 <= nmos_net[(key, c + 1)],name=f"nmos_net_D_{name}_col_{c+1}_o0")
++                model.addConstr(c_bot[(j, c, 1)] + final_nmos_net_info[t]['drain'][key] - 1 <= nmos_net[(key, c - 1)],name=f"nmos_net_D_{name}_col_{c-1}_o1")
+ 
+@@ -1277,2 +1312,138 @@ if routing_switch == 'off':
+ 
++# ── If routing phase, load placement result and fix variables ──
++if args.phase == 'routing':
++    placement_json = args.placement_file if args.placement_file else f"{cell_name_for_io}.placement.json"
++    if not os.path.exists(placement_json):
++        raise SystemExit(f"ERROR: {placement_json} not found. Run --phase placement first.")
++    with open(placement_json, 'r') as pf:
++        pdata = json.load(pf)
++    # Fix placement variables from saved result
++    for entry in pdata['top']:
++        i, c, o = entry['idx'], entry['col'], entry['orient']
++        for cc in gate_cols:
++            for oo in [0, 1]:
++                if cc == c and oo == o:
++                    model.addConstr(c_top[(i, cc, oo)] == 1, name=f"fix_top_{i}_{cc}_{oo}")
++                else:
++                    model.addConstr(c_top[(i, cc, oo)] == 0, name=f"fix_top_{i}_{cc}_{oo}_off")
++    for entry in pdata['bot']:
++        j, c, o = entry['idx'], entry['col'], entry['orient']
++        for cc in gate_cols:
++            for oo in [0, 1]:
++                if cc == c and oo == o:
++                    model.addConstr(c_bot[(j, cc, oo)] == 1, name=f"fix_bot_{j}_{cc}_{oo}")
++                else:
++                    model.addConstr(c_bot[(j, cc, oo)] == 0, name=f"fix_bot_{j}_{cc}_{oo}_off")
++    # Fix net-to-column assignment
++    for c_idx, net in enumerate(pdata['pmos_columns']):
++        if net is not None:
++            model.addConstr(pmos_net[(net, c_idx)] == 1, name=f"fix_pmos_{net}_{c_idx}")
++    for c_idx, net in enumerate(pdata['nmos_columns']):
++        if net is not None:
++            model.addConstr(nmos_net[(net, c_idx)] == 1, name=f"fix_nmos_{net}_{c_idx}")
++    print(f"Loaded placement from {placement_json}")
++
++# ── Verify mode: fix fast_pnr solution and check SAT/UNSAT ──────────────────
++if args.verify_fast_pnr:
++    import ast as _ast
++
++    def _parse_fast_pnr(filepath):
++        """Parse fast_pnr.py output → (pmos_cols, nmos_cols, routing, via_dict).
++        routing: {net: {row: [0/1, ...]}}
++        via_dict: {net: [(1, position), ...]}  — from "Optimal Via positions:" section
++        """
++        pmos_cols, nmos_cols = None, None
++        routing = {}
++        via_dict = {}
++        in_optimal_via = False
++        with open(filepath) as _f:
++            for _line in _f:
++                _line = _line.rstrip()
++                _m = re.match(r"PMOS:\s*\d+\s+(\[.*\])", _line)
++                if _m:
++                    pmos_cols = _ast.literal_eval(_m.group(1))
++                _m = re.match(r"NMOS:\s*\d+\s+(\[.*\])", _line)
++                if _m:
++                    nmos_cols = _ast.literal_eval(_m.group(1))
++                _m = re.match(r"\s+Net (\S+), H \d+, Row (\d+):\s+(\[.*\])", _line)
++                if _m:
++                    _net, _row, _arr = _m.group(1), int(_m.group(2)), _ast.literal_eval(_m.group(3))
++                    routing.setdefault(_net, {})[_row] = _arr
++                if _line.strip() == "Optimal Via positions:":
++                    in_optimal_via = True
++                    continue
++                if in_optimal_via:
++                    _m = re.match(r"\s+Net (\S+): Via positions (\[.*\])", _line)
++                    if _m:
++                        _net = _m.group(1)
++                        _vlist = _ast.literal_eval(_m.group(2))
++                        if _vlist:
++                            via_dict[_net] = _vlist
++                    elif _line.strip() and not _line.startswith(" "):
++                        in_optimal_via = False
++        if pmos_cols is None or nmos_cols is None:
++            raise SystemExit(f"ERROR: could not parse PMOS/NMOS columns from {filepath}")
++        return pmos_cols, nmos_cols, routing, via_dict
++
++    _fp_pmos, _fp_nmos, _fp_route, _fp_via = _parse_fast_pnr(args.verify_fast_pnr)
++    print(f"[VERIFY] Loaded fast_pnr solution from {args.verify_fast_pnr}")
++    print(f"[VERIFY] PMOS: {_fp_pmos}")
++    print(f"[VERIFY] NMOS: {_fp_nmos}")
++
++    # Fix pmos_net
++    for c in columns:
++        _fp_net = _fp_pmos[c] if c < len(_fp_pmos) else None
++        for _net in unique_pmos_nets:
++            _val = 1 if _net == _fp_net else (1 if _fp_net not in unique_pmos_nets and _net == "dummy" else 0)
++            pmos_net[(_net, c)].lb = _val
++            pmos_net[(_net, c)].ub = _val
++
++    # Fix nmos_net
++    for c in columns:
++        _fn_net = _fp_nmos[c] if c < len(_fp_nmos) else None
++        for _net in unique_nmos_nets:
++            _val = 1 if _net == _fn_net else (1 if _fn_net not in unique_nmos_nets and _net == "dummy" else 0)
++            nmos_net[(_net, c)].lb = _val
++            nmos_net[(_net, c)].ub = _val
++
++    # Fix routing variables (only when routing phase is active)
++    if routing_switch == 'on':
++        for _net in total_nets:
++            if _net in power_net:
++                continue
++            for c in columns:
++                for r in rows:
++                    _arr = _fp_route.get(_net, {}).get(r, [0] * num_cols)
++                    _val = _arr[c] if c < len(_arr) else 0
++                    t_n_c_r[_net][c, r].lb = _val
++                    t_n_c_r[_net][c, r].ub = _val
++                for r in upper_rows:
++                    _arr = _fp_route.get(_net, {}).get(r, [0] * num_cols)
++                    _val = _arr[c] if c < len(_arr) else 0
++                    ut_n_c_r[_net][c, r].lb = _val
++                    ut_n_c_r[_net][c, r].ub = _val
++        # eol net: leave free so the ILP can place boundary-gap filler metal
++        # (same as normal solve; forcing eol=0 rejects valid ILP solutions
++        #  that rely on eol to satisfy edge boundary constraints)
++        # vias: pin from fast_pnr via positions
++        for _net in total_nets:
++            if _net in power_net:
++                continue
++            _net_vias = _fp_via.get(_net, [])
++            for v in via_indices:
++                _via_p = via_positions[v]
++                _val = 1 if any(pos == _via_p for (_, pos) in _net_vias) else 0
++                v_n_v[_net][v].lb = _val
++                v_n_v[_net][v].ub = _val
++
++    model.setParam('MIPFocus', 1)     # find feasible solution fast
++    model.setParam('TimeLimit', 120)
++    model.setParam('DualReductions', 0)  # avoid INF_OR_UNBD; get definitive SAT/UNSAT
++    print("[VERIFY] Variables fixed. Running feasibility check ...")
++
++# ── Solution pool for multi-placement (placement phase only) ──
++if args.phase == 'placement' and args.pool_size > 1:
++    model.setParam('PoolSearchMode', 2)   # actively search for N diverse solutions
++    model.setParam('PoolSolutions', args.pool_size)
++
+ # Optimize model
+@@ -1282,2 +1453,31 @@ end_time = time.perf_counter()
+ 
++# ── Verify mode result ───────────────────────────────────────────────────────
++if args.verify_fast_pnr:
++    end_time = time.perf_counter()
++    print(f"[VERIFY] Gurobi status code: {model.status}  (runtime {round(end_time-start_time,2)}s)")
++    if model.status in (GRB.OPTIMAL, GRB.SUBOPTIMAL):
++        print("[VERIFY] ✓ SAT — fast_pnr solution satisfies all ILP constraints.")
++    elif model.status == GRB.INFEASIBLE:
++        print("[VERIFY] ✗ UNSAT — fast_pnr solution violates at least one ILP constraint.")
++        print("[VERIFY] Computing IIS (Irreducible Infeasible Subsystem)...")
++        model.computeIIS()
++        iis_path = f"{cell_name_for_io}.ilp"
++        try:
++            model.write(iis_path)
++            print(f"[VERIFY] IIS written to: {iis_path}")
++        except Exception as _e:
++            print(f"[VERIFY] IIS write failed ({_e}) — listing inline only.")
++        print("[VERIFY] Violated constraints:")
++        for _c in model.getConstrs():
++            if _c.IISConstr:
++                print(f"  VIOLATED CONSTR: {_c.ConstrName}")
++        for _v in model.getVars():
++            if _v.IISLB:
++                print(f"  VIOLATED LB: {_v.VarName}  (lb={_v.lb})")
++            if _v.IISUB:
++                print(f"  VIOLATED UB: {_v.VarName}  (ub={_v.ub})")
++    else:
++        print(f"[VERIFY] Unexpected status: {model.status} (TIME_LIMIT={GRB.TIME_LIMIT})")
++    raise SystemExit(0)
++
+ if model.status == GRB.OPTIMAL:
+@@ -1322,2 +1522,41 @@ if model.status == GRB.OPTIMAL:
+     pr ("NMOS: 1 ",nmos_columns)
++
++    # ── Save placement result(s) for sequential routing phase ──
++    if args.phase in ('placement', 'both'):
++        n_sols = min(model.SolCount, args.pool_size) if args.phase == 'placement' else 1
++        for k in range(n_sols):
++            if k > 0:
++                model.setParam('SolutionNumber', k)
++            top_placements = []
++            for i, t in enumerate(top_trans):
++                for c in gate_cols:
++                    for o in [0, 1]:
++                        if c_top[(i, c, o)].X > 0.5:
++                            top_placements.append({'idx': i, 'name': t[0], 'col': c, 'orient': o})
++            bot_placements = []
++            for j, t in enumerate(bot_trans):
++                for c in gate_cols:
++                    for o in [0, 1]:
++                        if c_bot[(j, c, o)].X > 0.5:
++                            bot_placements.append({'idx': j, 'name': t[0], 'col': c, 'orient': o})
++            pm_cols = [None] * num_cols
++            nm_cols = [None] * num_cols
++            for c in range(num_cols):
++                for net in unique_pmos_nets:
++                    if pmos_net[(net, c)].X > 0.5:
++                        pm_cols[c] = net
++                for net in unique_nmos_nets:
++                    if nmos_net[(net, c)].X > 0.5:
++                        nm_cols[c] = net
++            placement_data = {
++                'top': top_placements, 'bot': bot_placements,
++                'pmos_columns': pm_cols, 'nmos_columns': nm_cols,
++            }
++            fname = f"{cell_name_for_io}.placement.json" if k == 0 else f"{cell_name_for_io}.placement_{k}.json"
++            with open(fname, 'w') as pf:
++                json.dump(placement_data, pf, indent=2)
++            print(f"Placement {k} saved to {fname}")
++        if n_sols > 1:
++            model.setParam('SolutionNumber', 0)  # restore primary
++
+     for key, var in indicator_i_vars.items():
+@@ -1396 +1635,58 @@ else:
+ pr ("Runtime : ",round(end_time-start_time,3))
++
++# ── Generate optimized CDL reflecting actual placement ──
++if model.status == GRB.OPTIMAL:
++    cdl_trans = getattr(parse_args, '_cdl_trans', [])
++    if cdl_trans:
++        # Build placement map: transistor name → (column, orientation)
++        placement = {}
++        for i, t in enumerate(top_trans):
++            for c in gate_cols:
++                for o in [0, 1]:
++                    if c_top[(i, c, o)].X > 0.5:
++                        placement[t[0]] = (c, o, 'pmos')
++        for j, t in enumerate(bot_trans):
++            for c in gate_cols:
++                for o in [0, 1]:
++                    if c_bot[(j, c, o)].X > 0.5:
++                        placement[t[0]] = (c, o, 'nmos')
++
++        # A transistor the ILP never placed has no columns backing it, so its
++        # original connectivity describes a circuit the GDS does not implement.
++        # Check before opening the file so no partial CDL is left behind.
++        unplaced = [tr['name'] for tr in cdl_trans if tr['name'] not in placement]
++        if unplaced:
++            raise RuntimeError(
++                "ILP produced no placement for transistor(s) "
++                + ", ".join(unplaced)
++                + f" in cell '{subckt_name}'. Refusing to write an optimized CDL "
++                  "that asserts original connectivity the layout does not have."
++            )
++
++        cdl_path = f"{cell_name_for_io}.cdl"
++        with open(cdl_path, 'w', encoding='utf-8') as cf:
++            cf.write(f".SUBCKT {subckt_name} {' '.join(io_pins)}\n")
++            for tr in cdl_trans:
++                name = tr['name']
++                if name in placement:
++                    col, orient, mos_type = placement[name]
++                    if mos_type == 'pmos':
++                        cols = pmos_columns
++                    else:
++                        cols = nmos_columns
++                    gate_net = cols[col]
++                    # orient=0: S at col-1, D at col+1
++                    # orient=1: S at col+1, D at col-1
++                    if orient == 0:
++                        s_net = cols[col - 1] if col - 1 >= 0 else tr['S']
++                        d_net = cols[col + 1] if col + 1 < len(cols) else tr['D']
++                    else:
++                        s_net = cols[col + 1] if col + 1 < len(cols) else tr['S']
++                        d_net = cols[col - 1] if col - 1 >= 0 else tr['D']
++                    cf.write(f"{name} {d_net} {gate_net} {s_net} {tr['B']} {tr['type']} {tr['params']}\n")
++                else:
++                    raise AssertionError(
++                        f"unplaced transistor '{name}' reached the CDL writer"
++                    )
++            cf.write(f".ENDS\n")
++        print(f"Optimized CDL written to: {cdl_path}")
+diff --git a/Framework/CellGen/src/gdsInfoClass.py b/Framework/CellGen/src/gdsInfoClass.py
+index 4ee1c1a..7a2f8a2 100644
+--- a/Framework/CellGen/src/gdsInfoClass.py
++++ b/Framework/CellGen/src/gdsInfoClass.py
+@@ -342,3 +342,3 @@ class MetalLayerInfo:
+     # **New Method to Create Labels Based on Net Names**
+-    def create_labels(self, cell, layout, nets_data, M0_power_rail_width, M0_power_rail_to_1st_M0_track, label_font_height, outline_right, order=None):
++    def create_labels(self, cell, layout, nets_data, M0_power_rail_width, M0_power_rail_to_1st_M0_track, label_font_height, outline_right, order=None, port_nets=None):
+         # Define the label layer using layer_number and label_datatype
+@@ -349,6 +349,10 @@ class MetalLayerInfo:
+         for net_name, net_info in nets_data.items():
+-            # **Filter Nets by Name:**
+-            # Only process nets whose names start with an uppercase alphabet
+-            if not net_name or not net_name[0].isupper():
+-                continue  # Skip nets not starting with uppercase
++            # Filter: only label actual I/O ports (if port list provided), else fall back
++            # to uppercase-initial heuristic for backward compatibility.
++            if port_nets is not None:
++                if net_name not in port_nets:
++                    continue
++            else:
++                if not net_name or not net_name[0].isupper():
++                    continue  # Skip nets not starting with uppercase
+             print (f"make label for {net_name}!")
+@@ -389,3 +393,3 @@ class MetalLayerInfo:
+                             print (y_center,x_positions[0])
+-                            x_center = ((GATE.width + GATE.pitch)/2)*(x_positions[0][0] + x_positions[0][1]) / 2 
++                            x_center = ((GATE.width + GATE.pitch)/2)*(x_positions[0][0] + x_positions[0][1]) / 2
+                             #text_shape = pya.Text(net_name, pya.Trans(pya.Trans.R0, x_center, y_center))
+@@ -901,9 +905,10 @@ class ViaLayerInfo:
+ 
+-                # Decide row mapping by mh_order (avoid using the name 'list')
+-                # N_FIRST: h1 -> rows 2,3 ; h2 -> rows 0,1
+-                # P_FIRST: h1 -> rows 0,1 ; h2 -> rows 2,3
+-                if mh_order == "N_FIRST":
+-                    row_map = [[0, 1], [2, 3]]
+-                else:
++                # Decide row mapping by mh_order for NMOS-only positions
++                # NMOS rows are OPPOSITE of PMOS rows
++                # N_FIRST: h1 -> rows 0,1 ; h2 -> rows 2,3
++                # P_FIRST: h1 -> rows 2,3 ; h2 -> rows 0,1
++                if mh_order == "P_FIRST":
+                     row_map = [[2, 3], [0, 1]]
++                else:
++                    row_map = [[0, 1], [2, 3]]
+                 for x_center in nmos_only_x_centers[h]:
+diff --git a/Framework/CellGen/src/gdsgen.py b/Framework/CellGen/src/gdsgen.py
+index 26c17b5..e4b828f 100644
+--- a/Framework/CellGen/src/gdsgen.py
++++ b/Framework/CellGen/src/gdsgen.py
+@@ -15,2 +15,3 @@ mh_order = "N_FIRST"   # <-- define BEFORE any use
+ 
++port_nets_map = {}  # cell_name -> [port, ...]
+ cfg_path = os.environ.get("GDSGEN_CONFIG")
+@@ -21,3 +22,4 @@ if cfg_path and Path(cfg_path).exists():
+     cells = cfg.get("cells", cfg.get("filenames", cells))
+-    mh_order = cfg.get("mh_order", mh_order)   # NEW
++    mh_order = cfg.get("mh_order", mh_order)
++    port_nets_map = cfg.get("port_nets", {})
+ 
+@@ -188,3 +190,21 @@ for filename in cells:
+ 	# label gen
+-	M0.create_labels(new_cell,new_layout,nets_data,M0_power_rail_width,M0_power_rail_to_1st_M0_track,10,outline_box.right,order=order)
++	# The CDL port list is authoritative for pin labeling. The uppercase-initial
++	# fallback in create_labels decides pins by net-name spelling, so once a
++	# config supplies port_nets a lookup miss (or an empty port list) is broken
++	# data, not a reason to guess.
++	if cfg_path:
++		if cell_name not in port_nets_map:
++			raise KeyError(
++				f"no 'port_nets' entry for cell '{cell_name}' in GDSGEN_CONFIG "
++				f"{cfg_path}; known cells: {sorted(port_nets_map)}"
++			)
++		cell_port_nets = port_nets_map[cell_name]
++		if not cell_port_nets:
++			raise ValueError(
++				f"'port_nets' entry for cell '{cell_name}' in GDSGEN_CONFIG "
++				f"{cfg_path} is empty; refusing to label pins by name heuristic"
++			)
++	else:
++		cell_port_nets = port_nets_map.get(cell_name) or None
++	M0.create_labels(new_cell,new_layout,nets_data,M0_power_rail_width,M0_power_rail_to_1st_M0_track,10,outline_box.right,order=order,port_nets=cell_port_nets)
+ 	
+diff --git a/Framework/PostCellGen/inputs/PROBE.pm b/Framework/PostCellGen/inputs/PROBE.pm
+index bc1e8ae..a7a6a03 100644
+--- a/Framework/PostCellGen/inputs/PROBE.pm
++++ b/Framework/PostCellGen/inputs/PROBE.pm
+@@ -15,2 +15,5 @@
+ 
++* Capacitor model for Quantus PEX extracted netlists
++.model cmodel C
++
+ *.lib nfet_typ
+diff --git a/Framework/PostCellGen/run.sh b/Framework/PostCellGen/run.sh
+index 336825b..89c2d54 100755
+--- a/Framework/PostCellGen/run.sh
++++ b/Framework/PostCellGen/run.sh
+@@ -8,2 +8,3 @@ fi
+ 
++module load innovus/21.1
+ module load pegasus/21.3
+@@ -44,5 +45,38 @@ CELLS=`cat ${CDL_FILE} | grep -i .SUBCKT | awk '{print $2}'`
+ 
++# Gate the flow on the Pegasus LVS verdict. Anything other than an explicit
++# MATCH means the layout does not implement the netlist it claims to, so any
++# downstream PEX / Quantus / Liberate result would describe a different circuit
++# than the .cdl. Abort instead of continuing to characterization.
++check_lvs_verdict() {
++	_cell=$1
++	_log=$2
++
++	if [ ! -r "${_log}" ]; then
++		echo "ERROR: LVS log for cell '${_cell}' is missing or unreadable: ${_log}" >&2
++		echo "ERROR: cannot confirm layout-vs-schematic equivalence. Aborting before PEX/characterization." >&2
++		exit 1
++	fi
++
++	_verdict=`grep -E '^[[:space:]]*#[[:space:]]*Run Result[[:space:]]*:' "${_log}" | head -1 | sed -e 's/.*Run Result[[:space:]]*:[[:space:]]*//' -e 's/[[:space:]]*#*[[:space:]]*$//'`
++
++	if [ -z "${_verdict}" ]; then
++		echo "ERROR: no LVS 'Run Result' verdict found in ${_log} for cell '${_cell}'." >&2
++		echo "ERROR: the LVS run did not complete. Aborting before PEX/characterization." >&2
++		exit 1
++	fi
++
++	if [ "${_verdict}" != "MATCH" ]; then
++		echo "ERROR: LVS ${_verdict} for cell '${_cell}' (log: ${_log})." >&2
++		echo "ERROR: layout does not match the source netlist ${CDL_FILE}." >&2
++		echo "ERROR: refusing to run PEX/Quantus/Liberate on a mismatched cell." >&2
++		exit 1
++	fi
++
++	echo "LVS MATCH confirmed for cell '${_cell}'"
++}
++
+ for CELL in $CELLS; do
++	export LVS_LOG_FILE="${LOG_DIR}/${CELL}_${LIB_NAME}.lvs.log"
++
+ 	if [ ! -e ${DONE_DIR}/${CELL}_${LIB_NAME}_lvs.done ]; then
+-		export LVS_LOG_FILE="${LOG_DIR}/${CELL}_${LIB_NAME}.lvs.log"
+ 
+@@ -56,5 +90,12 @@ for CELL in $CELLS; do
+ 			-layout_top_cell ${CELL} \
+-			${PVL_FILE} |& tee ${LVS_LOG_FILE} 
++			${PVL_FILE} |& tee ${LVS_LOG_FILE}
++
++		check_lvs_verdict "${CELL}" "${LVS_LOG_FILE}"
+ 
+ 		touch ${DONE_DIR}/${CELL}_${LIB_NAME}_lvs.done
++	else
++		# A done-marker only records that LVS ran, not that it passed. Markers
++		# written before this check existed can mark a MISMATCH cell as done, so
++		# re-read the verdict on the skip path too.
++		check_lvs_verdict "${CELL}" "${LVS_LOG_FILE}"
+ 	fi
+diff --git a/Framework/PostCellGen/scripts/get_cell_info.py b/Framework/PostCellGen/scripts/get_cell_info.py
+index dd6dd1e..e4491a8 100755
+--- a/Framework/PostCellGen/scripts/get_cell_info.py
++++ b/Framework/PostCellGen/scripts/get_cell_info.py
+@@ -57,3 +57,3 @@ def separate_pins(pin_labels):
+     input_patterns = [r'^A.*', r'^B.*', r'^C.*', r'^D.*']
+-    output_patterns = [r'^CO.*', r'^Z.*', r'^Q.*', r'^S.*']
++    output_patterns = [r'^CO.*', r'^Z.*', r'^Q.*', r'^S.*', r'^Y.*']
+ 
+diff --git a/Framework/PostCellGen/scripts/template.tcl b/Framework/PostCellGen/scripts/template.tcl
+index 8cc6596..662ee0a 100755
+--- a/Framework/PostCellGen/scripts/template.tcl
++++ b/Framework/PostCellGen/scripts/template.tcl
+@@ -3,7 +3,4 @@
+ 
+-#$Id$
+ 
+-set_vdd -type primary VDD $VDD
+-set_gnd -type primary VSS 0
+-set_gnd -no_model     GND 0
++#$Id$
+ 
+@@ -348,2 +345,24 @@ foreach cell $cells {
+ 
++  if {[regexp {^[0-9]+input0x} $cell]} {
++    set info_file "${RESULTS_DIR}/cell_info/${cell}.info"
++    if {[file exists $info_file]} {
++      set fh [open $info_file r]
++      set lines [split [read $fh] \n]
++      close $fh
++      set raw_inputs  [split [lindex $lines 1] " "]
++      set raw_outputs [split [lindex $lines 2] " "]
++      set input_pins  [lsearch -all -inline -not $raw_inputs  ""]
++      set output_pins [lsearch -all -inline -not $raw_outputs ""]
++      set pinlist [concat $input_pins $output_pins]
++      if {[llength $input_pins] > 0 && [llength $output_pins] > 0 && [ALAPI_active_cell $cell]} {
++        define_cell \
++         -input  $input_pins  \
++         -output $output_pins \
++         -pinlist $pinlist    \
++         -delay delay_template \
++         -power power_template \
++         $cell
++      }
++    }
++  }
+ 

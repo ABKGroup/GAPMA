@@ -1,0 +1,17 @@
+.SUBCKT 4input0x88A0_X1 A B C D VDD VSS Y
+* Canonical: 0b0000000000011011
+* Function: Y = binate [recursive NAND/NOR, 12 TR]
+* Transistors: 12
+MP0 bg D VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MbcP2 npbc0 A VDD VDD pmos_rvt W=46.0n L=16n nfin=2
+MbcP3 npbc1 C npbc0 VDD pmos_rvt W=46.0n L=16n nfin=2
+MbcP4 npbc1 bg npbc0 VDD pmos_rvt W=46.0n L=16n nfin=2
+MbcP5 Y B npbc1 VDD pmos_rvt W=46.0n L=16n nfin=2
+MbcP6 Y D npbc1 VDD pmos_rvt W=46.0n L=16n nfin=2
+MN1 bg D VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MbcN0 Y A VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MbcN2 Y C nsbc1 VSS nmos_rvt W=46.0n L=16n nfin=2
+MbcN3 nsbc1 bg VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+MbcN5 Y B nsbc4 VSS nmos_rvt W=46.0n L=16n nfin=2
+MbcN6 nsbc4 D VSS VSS nmos_rvt W=46.0n L=16n nfin=2
+.ENDS

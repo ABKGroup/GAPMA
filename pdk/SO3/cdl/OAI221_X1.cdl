@@ -1,0 +1,12 @@
+.SUBCKT OAI221_X1 A1 A2 B1 B2 C VDD VSS Y
+MM12 VSS A2 net042 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM13 VSS A1 net042 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM11 Y B2 net044 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM10 Y B1 net044 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM14 net044 C net042 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM3 VDD A1 net048 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 Y B2 net047 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 net047 B1 VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 Y C VDD VDD pmos_rvt w=46.0n l=16n nfin=2
+MM30 net048 A2 Y VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS

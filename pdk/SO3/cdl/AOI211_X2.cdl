@@ -1,0 +1,13 @@
+.SUBCKT AOI211_X2 A B C D VDD VSS Y
+* Canonical: 0b1000100010000000
+* Function: Y = !(D+C+A·B) [4 lits, SOP was 4]
+* Transistors: 8
+MMP2 npM0 D VDD VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP3 npM1 C npM0 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP4 Y A npM1 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMP5 Y B npM1 VDD pmos_rvt W=92.0n L=16n nfin=4
+MMN0 Y D VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN1 Y C VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN3 Y A nsM2 VSS nmos_rvt W=92.0n L=16n nfin=4
+MMN4 nsM2 B VSS VSS nmos_rvt W=92.0n L=16n nfin=4
+.ENDS

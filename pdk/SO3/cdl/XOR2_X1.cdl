@@ -1,0 +1,12 @@
+.SUBCKT XOR2_X1 A1 A2 VDD VSS Z
+MM9 VSS A2 net5 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM8 net5 A1 Z VSS nmos_rvt w=46.0n l=16n nfin=2
+MM7 VSS net2 Z VSS nmos_rvt w=46.0n l=16n nfin=2
+MM6 VSS A1 net2 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM5 VSS A2 net2 VSS nmos_rvt w=46.0n l=16n nfin=2
+MM4 Z A2 net8 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM3 Z A1 net8 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM2 VDD net2 net8 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM1 net2 A1 net7 VDD pmos_rvt w=46.0n l=16n nfin=2
+MM0 VDD A2 net7 VDD pmos_rvt w=46.0n l=16n nfin=2
+.ENDS
